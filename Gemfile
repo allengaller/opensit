@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
-ruby '2.1.1'
+ruby '2.1.5'
 
-gem 'rails', '4.0.4'
+gem 'rails', '4.2'
 gem 'rack'
 gem 'puma'
 
@@ -15,7 +15,6 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'rspec-collection_matchers'
   gem 'factory_girl_rails'
-  gem 'annotate'
   gem 'meta_request', '0.2.6'
   gem 'jazz_hands', github: 'nixme/jazz_hands', branch: 'bring-your-own-debugger'
   gem 'pry-byebug'
@@ -39,7 +38,7 @@ gem 'therubyracer'
 gem 'uglifier', '>= 1.0.3'
 gem 'momentjs-rails', '~> 2.5.0'
 gem 'bootstrap3-datetimepicker-rails', '~> 2.1.30'
-gem 'font-awesome-sass'
+gem 'font-awesome-sass', '4.0.3.1'
 
 group :test do
   gem 'capybara', ">= 2.2.0"
@@ -70,7 +69,8 @@ gem 'mini_magick'
 gem 'simple_form'
 gem 'country_select'
 gem 'chosen-rails'
-gem 'compass-rails', github: 'Compass/compass-rails' # Required by chosen, needs to be explicit
+gem 'compass-rails', '2.0.0'
+# gem 'compass-rails', github: 'Compass/compass-rails' # Required by chosen, needs to be explicit
 gem 'bootstrap-wysihtml5-rails'
 gem "jquery-rails", "2.3.0"
 

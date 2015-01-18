@@ -89,22 +89,22 @@ describe Goal do
 		let(:goal) { create(:goal, :sit_for_30_days, user: buddha) }
 
 		it 'under 50%' do
-			goal.stub(:rating) { 45 }
+                        allow(goal).to receive_messages(:rating => 45)
 			expect(goal.rating_colour).to eq 'red'
 		end
 
 		it 'under 70%' do
-			goal.stub(:rating) { 64 }
+                        allow(goal).to receive_messages(:rating => 64)
 			expect(goal.rating_colour).to eq 'amber'
 		end
 
 		it 'under 99%' do
-			goal.stub(:rating) { 91 }
+                        allow(goal).to receive_messages(:rating => 91)
 			expect(goal.rating_colour).to eq 'green'
 		end
 
 		it '100%' do
-			goal.stub(:rating) { 100 }
+                        allow(goal).to receive_messages(:rating => 100)
 			expect(goal.rating_colour).to eq 'gold'
 		end
 	end
@@ -149,13 +149,13 @@ describe Goal do
 			end
 
 			it 'third day' do
-				Timecop.freeze(Date.today + 2)
+				Timecop.freeze((Date.today + 2).to_time)
 				expect(goal.completed?).to eq false
 				expect(goal.days_into_goal).to eq 3
 			end
 
 			it 'fourth day (goal ended)' do
-				Timecop.freeze(Date.today + 3)
+				Timecop.freeze((Date.today + 3).to_time)
 				expect(goal.completed?).to eq true
 				expect(goal.days_into_goal).to eq 3 # shouldn't increment any further
 			end
@@ -175,7 +175,7 @@ describe Goal do
 
 			it 'second day' do
 				goal
-				Timecop.freeze(Date.today + 1)
+				Timecop.freeze((Date.today + 1).to_time)
 				expect(goal.completed?).to eq false
 				expect(goal.days_into_goal).to eq 2
 			end
@@ -191,10 +191,10 @@ describe Goal do
 			goal = create(:goal, :sit_for_30_minutes_a_day, user: buddha, created_at: Date.today)
 			create(:sit, user: buddha, created_at: Date.today, duration: 30)
   		expect(goal.days_where_goal_met).to eq 1
-			Timecop.freeze(Date.today + 1)
+			Timecop.freeze((Date.today + 1).to_time)
 			create(:sit, user: buddha, created_at: Date.today, duration: 30)
   		expect(goal.days_where_goal_met).to eq 2
-			Timecop.freeze(Date.today + 1)
+			Timecop.freeze((Date.today + 1).to_time)
   		expect(goal.days_where_goal_met).to eq 2 # no change
   	end
 
@@ -203,7 +203,7 @@ describe Goal do
 				goal = create(:goal, :sit_20_minutes_for_3_days, user: buddha, created_at: Date.today)
 				create(:sit, user: buddha, created_at: Date.today, duration: 30)
 	  		expect(goal.days_where_goal_met).to eq 1
-				Timecop.freeze(Date.today + 4) # Goal finished
+				Timecop.freeze((Date.today + 4).to_time) # Goal finished
 				expect(goal.completed?).to eq true
 				create(:sit, user: buddha, created_at: Date.today, duration: 30)
 				expect(goal.days_where_goal_met).to eq 1
@@ -215,12 +215,20 @@ describe Goal do
 				goal = create(:goal, :sit_for_30_minutes_a_day, user: buddha, created_at: Date.today)
 				create(:sit, user: buddha, created_at: Date.today, duration: 30)
 	  		expect(goal.days_where_goal_met).to eq 1
-				Timecop.freeze(Date.today + 4)
+				Timecop.freeze((Date.today + 4).to_time)
 				goal.completed_date = Date.today
 				expect(goal.completed?).to eq true
-				Timecop.freeze(Date.today + 5)
+				Timecop.freeze((Date.today + 5).to_time)
 				create(:sit, user: buddha, created_at: Date.today, duration: 30)
 				expect(goal.days_where_goal_met).to eq 1
+			end
+
+			it 'does not return more than 14 days of results' do
+				# goal started 14 days ago
+				goal = create(:goal, :sit_for_30_minutes_a_day, user: buddha, created_at: Date.today - 13)
+				# generate sits starting today through 15 days ago
+				15.times.each { |i| create(:sit, user: buddha, created_at: Date.today - i, duration: 30) }
+				expect(goal.days_where_goal_met).to eq 14
 			end
   	end
 	end

@@ -19,6 +19,8 @@ describe Notification do
       expect(@buddha.notifications.first.message)
         .to eq("ananda commented on your sit.")
       expect(@buddha.notifications.first.initiator).to eq @ananda.id
+      expect(@buddha.notifications.first.object_type).to eq 'comment'
+      expect(@buddha.notifications.first.object_id).to eq @sit.comments.first.id
     end
 
     it "links to the sit comment" do
@@ -102,38 +104,56 @@ describe Notification do
       expect(@ananda.notifications.first.message).to eq 'buddha is now following you!'
       expect(@ananda.notifications.first.link).to eq user_path(@buddha)
       expect(@ananda.notifications.first.initiator).to eq @buddha.id
+      expect(@ananda.notifications.first.object_type).to eq 'follow'
+      expect(@ananda.notifications.first.object_id).to eq @buddha.relationships.where(follower_id: @buddha.id, followed_id: @ananda.id).first.id
     end
   end
 
   describe 'Likes a sit' do
-    it 'notifies user that sit was liked' do
+    before do
       @buddha = create :user
       @ananda = create :user, username: 'ananda'
-      @sit = create :sit, user: @buddha
+      @genko = create :user, username: 'genko'
+      @jiho = create :user, username: 'jiho'
+      @daiko = create :user, username: 'daiko'
+      @eido = create :user, username: 'eido'
 
+      @sit = create :sit, user: @buddha
+    end
+
+    it 'notifies user that sit was liked' do
       @ananda.like!(@sit)
 
       expect(@buddha.notifications.unread.count).to eq 1
       expect(@buddha.notifications.first.message).to eq 'ananda likes your entry.'
       expect(@buddha.notifications.first.link).to eq sit_path(@sit)
       expect(@buddha.notifications.first.initiator).to eq @ananda.id
+      expect(@buddha.notifications.first.object_type).to eq 'like'
+      expect(@buddha.notifications.first.object_id).to eq @sit.likes.first.id
+    end
+
+    it 'combines 2 consecutive likes in to one notification' do
+      @ananda.like!(@sit)
+      @genko.like!(@sit)
+
+      expect(@buddha.notifications.unread.count).to eq 1
+      expect(@buddha.notifications.first.message).to eq 'genko and 1 other person liked your entry.'
+      expect(@buddha.notifications.first.link).to eq sit_path(@sit)
+      expect(@buddha.notifications.first.initiator).to eq @genko.id
+    end
+
+    it 'combines 5 consecutive likes in to one notification' do
+      @ananda.like!(@sit)
+      @genko.like!(@sit)
+      @jiho.like!(@sit)
+      @daiko.like!(@sit)
+      @eido.like!(@sit)
+
+      expect(@buddha.notifications.unread.count).to eq 1
+      expect(@buddha.notifications.first.message).to eq 'eido and 4 other people liked your entry.'
+      expect(@buddha.notifications.first.link).to eq sit_path(@sit)
+      expect(@buddha.notifications.first.initiator).to eq @eido.id
     end
   end
 
 end
-
-# == Schema Information
-#
-# Table name: notifications
-#
-#  created_at  :datetime
-#  id          :integer          not null, primary key
-#  initiator   :integer
-#  link        :string(255)
-#  message     :string(255)
-#  object_id   :integer
-#  object_type :string
-#  updated_at  :datetime
-#  user_id     :integer
-#  viewed      :boolean          default(FALSE)
-#

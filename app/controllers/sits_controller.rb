@@ -44,7 +44,6 @@ class SitsController < ApplicationController
 
     if current_user == @sit.user
       @user = current_user
-
       @title = 'Edit sit'
       @page_class = 'edit-sit'
     else

@@ -62,6 +62,13 @@
           </div>
         </div>
       </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <i class="fa fa-flag-o report-flag" data-container='body' data-toggle='tooltip' data-placement='top' title='Report something on this page'></i>
+          <%= render 'reports/report_modal', reportable: @sit %>
+        </div>
+      </div>
     <% end %>
 
       <div class="prev-next-row">
@@ -104,8 +111,8 @@
       <% if user_signed_in? %>
       <div class="new-comment">
         <%= simple_form_for [@sit, @sit.comments.build], :remote => 'true' do |f| %>
-          <%= f.input :body, :label => false, :input_html => { :rows => 8, :class => 'rich-textarea span12', :placeholder => 'Have your say.' } %>
-          <%= f.submit 'Add comment', :class => 'btn btn-primary btn-lg pull-right' %>
+          <%= f.input :body, :label => false, :input_html => { :rows => 8, :class => 'rich-textarea col-md-12', :placeholder => 'Have your say.' } %>
+          <%= f.submit 'Post comment', :class => 'post-comment-btn btn btn-primary btn-lg pull-right' %>
         <% end %>
       </div>
       <% end %>

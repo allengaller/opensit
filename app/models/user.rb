@@ -5,7 +5,7 @@ class User < ActiveRecord::Base
                   :password, :email, :first_name, :gender, :last_name,
                   :practice, :style, :user_type, :username,
                   :who, :why, :password_confirmation, :remember_me, :avatar,
-                  :authorised_users, :privacy_setting
+                  :authorised_users, :privacy_setting, :receive_email
 
   has_many :sits, :dependent => :destroy
   has_many :messages_received, -> { where receiver_deleted: false }, class_name: 'Message', foreign_key: 'to_user_id'
@@ -24,6 +24,8 @@ class User < ActiveRecord::Base
                             source: :favourable,
                             source_type: "Sit"
   has_many :goals, :dependent => :destroy
+
+  has_many :reports, :dependent => :destroy
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
@@ -269,8 +271,8 @@ class User < ActiveRecord::Base
   end
 
   def follow!(other_user)
-    relationships.create!(followed_id: other_user.id)
-    Notification.send_notification('NewFollower', other_user.id, { follower: self })
+    follow = relationships.create!(followed_id: other_user.id)
+    Notification.send_new_follower_notification(other_user.id, follow)
   end
 
   def unfollow!(other_user)
@@ -283,6 +285,15 @@ class User < ActiveRecord::Base
     follows.delete(97)
     return false if follows.empty?
     return true
+  end
+
+  def users_to_follow
+    User.joins(:reverse_relationships)
+      .where(relationships: { follower_id: followed_user_ids })
+      .where.not(relationships: { followed_id: followed_user_ids })
+      .where.not(id: self.id)
+      .group("users.id")
+      .having("COUNT(followed_id) >= ?", 2)
   end
 
   def unread_count
@@ -384,7 +395,7 @@ class User < ActiveRecord::Base
   private
 
     def welcome_email
-      UserMailer.welcome_email(self).deliver
+      UserMailer.welcome_email(self).deliver_now
     end
 
     def follow_opensit
@@ -398,6 +409,7 @@ end
 # Table name: users
 #
 #  authentication_token   :string(255)
+#  authorised_users       :string(255)      default("")
 #  avatar_content_type    :string(255)
 #  avatar_file_name       :string(255)
 #  avatar_file_size       :integer
@@ -424,8 +436,8 @@ end
 #  locked_at              :datetime
 #  password_salt          :string(255)
 #  practice               :text
-#  private_diary          :boolean
-#  private_stream         :boolean          default(FALSE)
+#  privacy_setting        :string(255)      default("public")
+#  receive_email          :boolean          default(true)
 #  remember_created_at    :datetime
 #  remember_token         :string(255)
 #  reset_password_sent_at :datetime

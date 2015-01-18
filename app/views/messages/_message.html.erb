@@ -1,7 +1,17 @@
 <a href="<%=messages_path%>" class="btn btn-default">&larr; Back to inbox</a>
 
-<div class="title"><strong><%=@message.subject %></strong>
+<div class="title"><strong><%=@message.subject %></strong></div>
 <div class="body"><%= @message.body.html_safe %></div>
-<div class="from"><%= small_avatar_of(@message.from_user) %></div>
-<div class="date">Sent at <%= @message.received_at %></div>
-<div class="delete"><%= link_to 'Delete this message', message_path(@message), :method => :delete, :confirm => 'Are you sure you want to delete this message?' %></div>
+
+<div class="message_details">
+	<div class="from">
+		<div class="avatar"><%= small_avatar_of(@message.from_user) %></div>
+		<div class="username"><%= @message.from_user.display_name %></div>
+	</div>
+	<div class="date">Sent at <%= @message.received_at %></div>
+	<div class="delete"><%= link_to 'Delete this message', message_path(@message), :method => :delete, :confirm => 'Are you sure you want to delete this message?' %></div>
+</div>
+
+<div class="clearfix col-md-12">
+  <%= render 'reply' %>
+</div>

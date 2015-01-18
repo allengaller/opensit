@@ -8,11 +8,15 @@ Opensit::Application.routes.draw do
   end
 
   get 'me' => "users#me"
-  get '/u/:username' => "users#show", :as => :user
-  get '/u/:username/following' => "users#following", :as => :following_user
-  get '/u/:username/followers' => "users#followers", :as => :followers_user
-  get '/u/:username/export' => "users#export"
-  get '/u/:username/feed' => "users#feed", :as => :feed, :defaults => { :format => 'atom' }
+
+  constraints(:username => /[^\/]+/) do
+    get '/u/:username' => "users#show", :as => :user
+    get '/u/:username/following' => "users#following", :as => :following_user
+    get '/u/:username/followers' => "users#followers", :as => :followers_user
+    get '/u/:username/export' => "users#export"
+    get '/u/:username/feed' => "users#feed", :as => :feed, :defaults => { :format => 'atom' }
+  end
+
   get '/favs' => "favourites#index", :as => :favs
   get '/notifications' => "notifications#index"
   get '/welcome' => "users#welcome"
@@ -29,6 +33,7 @@ Opensit::Application.routes.draw do
   get 'explore/users/new' => "pages#new_users", :as => :explore_new_users
   get 'explore/users/active' => "pages#active_users", :as => :explore_active_users
   get 'explore/users/new/sitters' => "pages#new_sitters", :as => :explore_new_sitters
+  get 'calendar' => "pages#calendar", :as => :calendar
 
   resources :sits do
     resources :comments
@@ -40,6 +45,7 @@ Opensit::Application.routes.draw do
   resources :relationships, only: [:create, :destroy]
   resources :favourites, only: [:create, :destroy]
   resources :likes, only: [:create, :destroy]
+  resources :reports, only: [:create]
   resources :goals
 
   # Crawl live site, but not staging

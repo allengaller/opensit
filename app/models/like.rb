@@ -8,13 +8,13 @@ class Like < ActiveRecord::Base
   after_save :create_notification
 
   def self.likers_for(obj)
-    obj.likes.map { |u| User.find(u.user_id) }.reverse
+    obj.likes.order(id: :asc).map { |u| User.find(u.user_id) }
   end
 
   private
     def create_notification
-    	@obj = self.likeable_type.constantize.find(self.likeable_id)
-      Notification.send_notification('NewLikeOnSit', @obj.user.id, { liker: self.user, sit_link: @obj.id })
+      @obj = self.likeable_type.constantize.find(self.likeable_id)
+      Notification.send_new_sit_like_notification(@obj.user.id, self)
     end
 end
 

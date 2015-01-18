@@ -26,7 +26,6 @@ class Message < ActiveRecord::Base
     self.save
   end
 end
-
 # == Schema Information
 #
 # Table name: messages
@@ -41,4 +40,6 @@ end
 #  subject          :string(255)
 #  to_user_id       :integer
 #  updated_at       :datetime         not null
+#
+
 #

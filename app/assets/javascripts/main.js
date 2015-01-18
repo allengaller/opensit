@@ -64,6 +64,9 @@ $(document).ready(function(){
   // VIEW SIT / Likers list
   $("#likers-list").tooltip();
 
+  // VIEW SIT / Report
+  $('.report-flag').tooltip();
+
   // VIEW PROFILE / Date select
   $('.date_range_select').change( function() {
     Turbolinks.visit($(this).val());
@@ -82,6 +85,12 @@ $(document).ready(function(){
   $('#like_button').on('click', '.toggle-like', function(e) {
     e.preventDefault();
     $(this).closest('form').submit();
+  });
+
+  // REPORTS / a sit
+  $('.report-flag').on('click', function(e) {
+    e.preventDefault();
+    $('.report-modal').modal();
   });
 
   // MASONRY

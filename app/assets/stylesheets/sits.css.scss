@@ -142,6 +142,7 @@ article.sit-teaser-block {
         .tag-label {
           margin: 0 2px;
           background-color: #999;
+          display: inline-block;
           &:hover {
             background: #777;
           }
@@ -191,6 +192,29 @@ article.sit-teaser-block {
     }
     .like-row.my-sit {
       height: auto;
+    }
+
+    // Reports
+    .report-flag {
+      float: right;
+      margin-right: 20px;
+      margin-top: -20px;
+      color: $green;
+      &:hover {
+        cursor: pointer;
+        &:before {
+          content: "\f024";
+        }
+      }
+    }
+    .report-modal {
+      label {
+        text-align: left;
+      }
+      .form-group {
+        margin-left: 0;
+        margin-right: 0;
+      }
     }
 
     // Prev/next clickable areas
@@ -266,23 +290,52 @@ article.sit-teaser-block {
       width: 100%;
       padding: 10px;
       border-top: 1px solid #CCC;
+      .avatar {
+        float: left;
+        width: 65px;
+        img {
+          border-radius: 50%;
+        }
+      }
       .comment-body {
         margin: 20px 0;
         font-size: 0.9em;
       }
       .user {
         float: right;
-        font-size: 0.85em;
-        // opacity: 0.7;
+        min-width: 190px;
+        font-size: 0.7em;
         font-style: italic;
         margin: 10px 0 5px;
+        .delete-comment-form {
+          display: inline;
+          input[type='submit'] {
+            background: none;
+            padding: 0;
+            border: none;
+            margin: 0;
+            color: $link-color;
+            outline: none;
+            color: #999;
+            &:hover {
+              color: $link-color;
+            }
+          }
+        }
       }
     }
-    .new_comment {
-      width: 98%;
-      margin-left: 9px;
-      .wysihtml5-toolbar {
-        display: none;
+    .new-comment {
+      float: left;
+      width: 100%;
+      .post-comment-btn {
+        margin-top: 1em;
+      }
+      .new_comment {
+        width: 98%;
+        margin-left: 9px;
+        .wysihtml5-toolbar {
+          display: none;
+        }
       }
     }
   }
@@ -343,8 +396,6 @@ article.sit-teaser-block {
     border: 2px solid $green;
     background: $green;
     border-radius: 5px;
-    // background: white;
-    // color: $link-color;
     color: white;
     .fa-bolt {
       color: white;

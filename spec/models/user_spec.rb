@@ -35,6 +35,7 @@ describe User do
     it { should have_many(:notifications).dependent(:destroy) }
     it { should have_many(:favourites) }
     it { should have_many(:goals).dependent(:destroy) }
+    it { should have_many(:reports).dependent(:destroy) }
 
     describe "#favourite_sits" do
       let(:fav_sit) { create(:sit, user: ananda) }
@@ -54,13 +55,13 @@ describe User do
   context "after signup" do
     it 'sends welcome email' do
       ActionMailer::Base.deliveries.clear
-      ActionMailer::Base.deliveries.should be_empty
+      expect(ActionMailer::Base.deliveries).to be_empty
 
       email = 'sahaj@samadhi.com'
       create :user, email: email
 
-      ActionMailer::Base.deliveries.should_not be_empty
-      ActionMailer::Base.deliveries.last.to.should == [email]
+      expect(ActionMailer::Base.deliveries).to_not be_empty
+      expect(ActionMailer::Base.deliveries.last.to).to eq [email]
     end
 
     it 'follows opensit' do
@@ -174,6 +175,12 @@ describe User do
         end
      end
   end #location
+
+  describe "#receive_email" do
+    it "returns true" do
+      expect(user.receive_email).to be(true)
+    end
+  end
 
   describe "#display_name" do
     context "when a user has no first name" do
@@ -439,8 +446,8 @@ describe User do
     end
 
     it "sends a notification" do
-      expect(Notification).to receive(:send_notification)
-        .with('NewFollower', buddha.id, { follower: ananda })
+      expect(Notification).to receive(:send_new_follower_notification)
+        .with(buddha.id, an_instance_of(Relationship))
       ananda.follow!(buddha)
     end
   end
@@ -464,6 +471,53 @@ describe User do
       expect(buddha.following_anyone?).to be(false)
       buddha.follow!(ananda)
       expect(buddha.following_anyone?).to be(true)
+    end
+  end
+
+  describe "#users_to_follow" do
+    it "suggests users to follow" do
+      user = create(:user)
+      buddha = create(:user)
+      ananda = create(:user)
+      anuruddha = create(:user)
+
+      ananda.follow!(buddha)
+      anuruddha.follow!(buddha)
+
+      user.follow!(ananda)
+      user.follow!(anuruddha)
+
+      expect(user.users_to_follow).to match_array([buddha])
+    end
+
+    it "should not suggest the already followed users" do
+      user = create(:user)
+      buddha = create(:user)
+      ananda = create(:user)
+      anuruddha = create(:user)
+
+      ananda.follow!(buddha)
+      anuruddha.follow!(buddha)
+
+      user.follow!(ananda)
+      user.follow!(anuruddha)
+      user.follow!(buddha)
+
+      expect(user.users_to_follow).to eq([])
+    end
+
+    it "should not suggest myself" do
+      user = create(:user)
+      ananda = create(:user)
+      anuruddha = create(:user)
+
+      ananda.follow!(user)
+      anuruddha.follow!(user)
+
+      user.follow!(ananda)
+      user.follow!(anuruddha)
+
+      expect(user.users_to_follow).to eq([])
     end
   end
 
@@ -555,6 +609,7 @@ end
 # Table name: users
 #
 #  authentication_token   :string(255)
+#  authorised_users       :string(255)      default("")
 #  avatar_content_type    :string(255)
 #  avatar_file_name       :string(255)
 #  avatar_file_size       :integer
@@ -581,8 +636,8 @@ end
 #  locked_at              :datetime
 #  password_salt          :string(255)
 #  practice               :text
-#  private_diary          :boolean
-#  private_stream         :boolean          default(FALSE)
+#  privacy_setting        :string(255)      default("public")
+#  receive_email          :boolean          default(true)
 #  remember_created_at    :datetime
 #  remember_token         :string(255)
 #  reset_password_sent_at :datetime
