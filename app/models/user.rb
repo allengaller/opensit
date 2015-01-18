@@ -398,7 +398,6 @@ end
 # Table name: users
 #
 #  authentication_token   :string(255)
-#  authorised_users       :string(255)      default("")
 #  avatar_content_type    :string(255)
 #  avatar_file_name       :string(255)
 #  avatar_file_size       :integer
@@ -425,7 +424,6 @@ end
 #  locked_at              :datetime
 #  password_salt          :string(255)
 #  practice               :text
-#  privacy_setting        :string(255)      default("")
 #  private_diary          :boolean
 #  private_stream         :boolean          default(FALSE)
 #  remember_created_at    :datetime

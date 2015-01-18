@@ -289,6 +289,36 @@ ALTER SEQUENCE messages_id_seq OWNED BY messages.id;
 
 
 --
+-- Name: notification_types; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE notification_types (
+    id integer NOT NULL,
+    event character varying,
+    text character varying
+);
+
+
+--
+-- Name: notification_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE notification_types_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notification_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE notification_types_id_seq OWNED BY notification_types.id;
+
+
+--
 -- Name: notifications; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -300,7 +330,9 @@ CREATE TABLE notifications (
     initiator integer,
     viewed boolean DEFAULT false,
     created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    updated_at timestamp without time zone,
+    object_type character varying,
+    object_id integer
 );
 
 
@@ -389,6 +421,41 @@ CREATE SEQUENCE relationships_id_seq
 --
 
 ALTER SEQUENCE relationships_id_seq OWNED BY relationships.id;
+
+
+--
+-- Name: reports; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE reports (
+    id integer NOT NULL,
+    reportable_id integer,
+    reportable_type character varying(255),
+    user_id integer,
+    reason character varying(255),
+    body text,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
+-- Name: reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE reports_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE reports_id_seq OWNED BY reports.id;
 
 
 --
@@ -625,6 +692,13 @@ ALTER TABLE ONLY messages ALTER COLUMN id SET DEFAULT nextval('messages_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY notification_types ALTER COLUMN id SET DEFAULT nextval('notification_types_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notifications_id_seq'::regclass);
 
 
@@ -640,6 +714,13 @@ ALTER TABLE ONLY rails_admin_histories ALTER COLUMN id SET DEFAULT nextval('rail
 --
 
 ALTER TABLE ONLY relationships ALTER COLUMN id SET DEFAULT nextval('relationships_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY reports ALTER COLUMN id SET DEFAULT nextval('reports_id_seq'::regclass);
 
 
 --
@@ -727,6 +808,14 @@ ALTER TABLE ONLY messages
 
 
 --
+-- Name: notification_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY notification_types
+    ADD CONSTRAINT notification_types_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -748,6 +837,14 @@ ALTER TABLE ONLY rails_admin_histories
 
 ALTER TABLE ONLY relationships
     ADD CONSTRAINT relationships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY reports
+    ADD CONSTRAINT reports_pkey PRIMARY KEY (id);
 
 
 --
@@ -871,6 +968,20 @@ CREATE INDEX index_relationships_on_follower_id ON relationships USING btree (fo
 --
 
 CREATE UNIQUE INDEX index_relationships_on_follower_id_and_followed_id ON relationships USING btree (follower_id, followed_id);
+
+
+--
+-- Name: index_reports_on_reportable_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_reports_on_reportable_id ON reports USING btree (reportable_id);
+
+
+--
+-- Name: index_reports_on_user_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_reports_on_user_id ON reports USING btree (user_id);
 
 
 --
@@ -1015,3 +1126,7 @@ INSERT INTO schema_migrations (version) VALUES ('20140328194519');
 INSERT INTO schema_migrations (version) VALUES ('20140625193718');
 
 INSERT INTO schema_migrations (version) VALUES ('20141023191934');
+
+INSERT INTO schema_migrations (version) VALUES ('20141218153117');
+
+INSERT INTO schema_migrations (version) VALUES ('20141222165045');
