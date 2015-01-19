@@ -379,9 +379,9 @@ describe User do
       context 'privacy_setting: selected_users' do
         it 'only returns sit if user is following the current user' do
           dan = create(:user, privacy_setting: 'selected_users')
-          dans_sit = create(:sit, user: dan)
+          dans_sit = create(:sit, user: dan, body: 'personal details i aint keen to share with everyone')
           gina = create(:user)
-          # Gina wants to see Dan's content, but can't until he adds her to his authorised users
+          # Gina wants to see Dan's content, but Gina can't until Dan adds her as an authorised users
           gina.follow! dan
 
           expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.socialstream.count }.from(0).to(1)

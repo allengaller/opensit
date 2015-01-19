@@ -97,8 +97,23 @@ class Sit < ActiveRecord::Base
     followed_user_ids = "SELECT followed_id FROM relationships
                          WHERE follower_id = :user_id"
 
-    where("(user_id IN (#{followed_user_ids}) AND private = false) OR user_id = :user_id",
-          user_id: user.id)
+    # where("(user_id IN (#{followed_user_ids}) AND private = false) OR user_id = :user_id",
+          # user_id: user.id)
+
+    # Sits by other users I follow, who have privacy_setting = 'selected_users', and added me to their 'selected_users'
+    users_who_authorised_me = "SELECT authorised_users.user_id FROM authorised_users WHERE authorised_user_id = :user_id AND authorised_users.user_id IN (#{followed_user_ids})"
+
+    where("sits.user_id IN (#{users_who_authorised_me})", user_id: user.id)
+
+    # Sits by other users I follow, who have privacy_setting = 'following', and follow me
+
+    # where("(user_id IN (#{followed_user_ids}) AND ) FROM users I follow WHERE privacy_setting = 'following'
+    #   AND they follow me
+    # +
+
+    # Sits by other users I follow, who have privacy_setting = 'public'
+
+    # Join em up (date ordered)
   end
 
   def commenters
