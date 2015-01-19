@@ -166,7 +166,7 @@ class Sit < ActiveRecord::Base
 
     # Only display to selected users
     elsif user.privacy_setting == 'selected_users'
-      return true if current_user && (user.authorised_users.include? current_user.id.to_s)
+      return true if current_user && AuthorisedUser.where(user_id: self.user.id, authorised_user_id: current_user.id).present?
       return false
 
     # Public
@@ -175,20 +175,3 @@ class Sit < ActiveRecord::Base
     end
   end
 end
-
-# == Schema Information
-#
-# Table name: sits
-#
-#  body             :text
-#  created_at       :datetime         not null
-#  disable_comments :boolean
-#  duration         :integer
-#  id               :integer          not null, primary key
-#  private          :boolean          default(FALSE)
-#  s_type           :integer
-#  title            :string(255)
-#  updated_at       :datetime         not null
-#  user_id          :integer
-#  views            :integer          default(0)
-#

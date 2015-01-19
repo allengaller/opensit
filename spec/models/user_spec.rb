@@ -336,30 +336,56 @@ describe User do
     end
 
     describe "#socialstream" do
-      before do
-        Relationship.create(followed_id: buddha.id, follower_id: ananda.id)
-        first_sit
-        second_sit
-        third_sit
-        fourth_sit
+      context 'public journal' do
+        before do
+          Relationship.create(followed_id: buddha.id, follower_id: ananda.id)
+          first_sit
+          second_sit
+          third_sit
+          fourth_sit
+        end
+
+        it "returns an array of other followed users' sits" do
+          expect(ananda.socialstream).to eq(
+            [first_sit, second_sit, third_sit, fourth_sit])
+        end
+
+        it "does not return the oldest sits first" do
+          expect(ananda.socialstream).to_not eq(
+            [fourth_sit, third_sit, second_sit, first_sit])
+        end
+
+        it "should not shows stubs in socialstream" do
+          stub = create(:sit, user: buddha, body: '')
+          has_body = create(:sit, user: buddha, body: 'In the seeing, only the seen')
+          expect(buddha.sits.count).to eq(6)
+          expect(ananda.socialstream.count).to eq(5)
+          expect(ananda.socialstream).to_not include stub
+        end
       end
 
-      it "returns an array of other followed users' sits" do
-        expect(ananda.socialstream).to eq(
-          [first_sit, second_sit, third_sit, fourth_sit])
+      context 'privacy_setting: following' do
+        it 'only returns sit if user is following the current user' do
+          dan = create(:user, privacy_setting: 'following')
+          dans_sit = create(:sit, user: dan)
+          gina = create(:user)
+          # Gina wants to see Dan's content, but can't until he follows her
+          gina.follow! dan
+
+          expect { dan.follow! gina }.to change { gina.socialstream.count }.from(0).to(1)
+        end
       end
 
-      it "does not return the oldest sits first" do
-        expect(ananda.socialstream).to_not eq(
-          [fourth_sit, third_sit, second_sit, first_sit])
-      end
+      context 'privacy_setting: selected_users' do
+        it 'only returns sit if user is following the current user' do
+          dan = create(:user, privacy_setting: 'selected_users')
+          dans_sit = create(:sit, user: dan)
+          gina = create(:user)
+          # Gina wants to see Dan's content, but can't until he adds her to his authorised users
+          gina.follow! dan
 
-      it "should not shows stubs in socialstream" do
-        stub = create(:sit, user: buddha, body: '')
-        has_body = create(:sit, user: buddha, body: 'In the seeing, only the seen')
-        expect(buddha.sits.count).to eq(6)
-        expect(ananda.socialstream.count).to eq(5)
-        expect(ananda.socialstream).to_not include stub
+          expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.socialstream.count }.from(0).to(1)
+        end
       end
     end
 
@@ -603,54 +629,3 @@ describe User do
   end
 
 end
-
-# == Schema Information
-#
-# Table name: users
-#
-#  authentication_token   :string(255)
-#  authorised_users       :string(255)      default("")
-#  avatar_content_type    :string(255)
-#  avatar_file_name       :string(255)
-#  avatar_file_size       :integer
-#  avatar_updated_at      :datetime
-#  city                   :string(255)
-#  confirmation_sent_at   :datetime
-#  confirmation_token     :string(255)
-#  confirmed_at           :datetime
-#  country                :string(255)
-#  created_at             :datetime         not null
-#  current_sign_in_at     :datetime
-#  current_sign_in_ip     :string(255)
-#  default_sit_length     :integer          default(30)
-#  dob                    :date
-#  email                  :string(255)
-#  encrypted_password     :string(128)      default(""), not null
-#  failed_attempts        :integer          default(0)
-#  first_name             :string(255)
-#  gender                 :integer
-#  id                     :integer          not null, primary key
-#  last_name              :string(255)
-#  last_sign_in_at        :datetime
-#  last_sign_in_ip        :string(255)
-#  locked_at              :datetime
-#  password_salt          :string(255)
-#  practice               :text
-#  privacy_setting        :string(255)      default("public")
-#  receive_email          :boolean          default(true)
-#  remember_created_at    :datetime
-#  remember_token         :string(255)
-#  reset_password_sent_at :datetime
-#  reset_password_token   :string(255)
-#  sign_in_count          :integer          default(0)
-#  sits_count             :integer          default(0)
-#  streak                 :integer          default(0)
-#  style                  :string(100)
-#  unlock_token           :string(255)
-#  updated_at             :datetime         not null
-#  user_type              :integer
-#  username               :string(255)
-#  website                :string(100)
-#  who                    :text
-#  why                    :text
-#

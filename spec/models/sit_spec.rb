@@ -14,8 +14,8 @@ describe Sit do
 				@dan = create(
 					:user,
 					privacy_setting: 'selected_users',
-					authorised_users: [buddha.id]
 				)
+        AuthorisedUser.create!(user_id: @dan.id, authorised_user_id: buddha.id)
 				@sit = create(:sit, user: @dan)
   		end
 
