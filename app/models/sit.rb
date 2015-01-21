@@ -101,19 +101,22 @@ class Sit < ActiveRecord::Base
           # user_id: user.id)
 
     # Sits by other users I follow, who have privacy_setting = 'selected_users', and added me to their 'selected_users'
-    users_who_authorised_me = "SELECT authorised_users.user_id FROM authorised_users WHERE authorised_user_id = :user_id AND authorised_users.user_id IN (#{followed_user_ids})"
-
-    where("sits.user_id IN (#{users_who_authorised_me})", user_id: user.id)
+    selected_users = User.select('users.id')
+      .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
+      .where('authorised_users.authorised_user_id = ?', user.id)
+      .where('authorised_users.user_id IN (?)', user.followed_user_ids)
 
     # Sits by other users I follow, who have privacy_setting = 'following', and follow me
-
-    # where("(user_id IN (#{followed_user_ids}) AND ) FROM users I follow WHERE privacy_setting = 'following'
-    #   AND they follow me
-    # +
+    following = User.select('users.id')
+      .where("users.id IN (?)", user.mutual_following_ids)
+      .where("users.privacy_setting = 'following'")
 
     # Sits by other users I follow, who have privacy_setting = 'public'
+    public_users = User.select('users.id')
+      .where("users.privacy_setting = 'public'")
+      .where("users.id IN (?)", user.followed_user_ids)
 
-    # Join em up (date ordered)
+    where("sits.user_id IN (?)", selected_users + following + public_users)
   end
 
   def commenters

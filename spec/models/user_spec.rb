@@ -364,6 +364,16 @@ describe User do
         end
       end
 
+      context 'privacy_setting: public (default)' do
+        it 'returns public sits' do
+          dan = create(:user)
+          dans_sit = create(:sit, user: dan)
+          gina = create(:user)
+
+          expect { gina.follow! dan }.to change { gina.socialstream.count }.from(0).to(1)
+        end
+      end
+
       context 'privacy_setting: following' do
         it 'only returns sit if user is following the current user' do
           dan = create(:user, privacy_setting: 'following')
@@ -381,7 +391,7 @@ describe User do
           dan = create(:user, privacy_setting: 'selected_users')
           dans_sit = create(:sit, user: dan, body: 'personal details i aint keen to share with everyone')
           gina = create(:user)
-          # Gina wants to see Dan's content, but Gina can't until Dan adds her as an authorised users
+          # Gina wants to see Dan's content, but Gina can't until Dan adds her as an authorised user
           gina.follow! dan
 
           expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.socialstream.count }.from(0).to(1)
