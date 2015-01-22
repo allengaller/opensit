@@ -254,12 +254,16 @@ class User < ActiveRecord::Base
     return false
   end
 
-  def private_stream=(value)
-    unless value.downcase == 'true' || value.downcase == 'false'
-      raise ArgumentError, "Argument must be either 'true' or 'false'"
+  def privacy_setting=(value)
+    # If we're moving away from a private journal, need to remove
+    # the private marker all sits
+    if self.privacy_setting == 'private' && value != 'private'
+      sits.unscoped.update_all(private: false)
+    # Make my journal private - mark all sits as private
+    elsif value == 'private'
+      sits.update_all(private: true)
     end
-    sits.update_all(private: value)
-    write_attribute(:private_stream, value)
+    write_attribute(:privacy_setting, value)
   end
 
   def favourited?(sit_id)

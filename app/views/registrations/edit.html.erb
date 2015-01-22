@@ -4,13 +4,13 @@
 <%= simple_form_for(resource, :as => resource_name, :url => registration_path(resource_name), :html => { :multipart => :true, :method => :put , :class => 'form-horizontal'}) do |f| %>
   <%= devise_error_messages! %>
     <%= form_element(f, :privacy_setting, 'user', "Privacy setting", 6, { collection: [
-        ['Public <div>Anyone can read your journal (recommended). You can still make individual entries private.</div>'.html_safe, 0],
+        ['Public <div>Anyone can read your journal (recommended). You can still make individual entries private.</div>'.html_safe, 'public'],
         ['People I follow <div>Only people you choose to follow can read your journal. You can still make individual entries private.</div>'.html_safe, 'following'],
         ['Selected Users <div>Only people you select below will be able to view your journal. You can still make individual entries private.</div>'.html_safe, 'selected_users'],
         ['Private <div>No one will be able to view your journal except you.</div>'.html_safe, 'private']
       ], as: :radio_buttons, label: false }) %>
 
-    <%= form_element(f, :authorised_users, 'message', "To", 4, { label: false, collection: User.all, label_method: 'username', input_html: { multiple: true, data: { placeholder: 'Choose a user'}, class: 'chzn-select' } }) %>
+    <%#= form_element(f, :authorised_users, 'message', "To", 4, { label: false, collection: User.all, label_method: 'username', input_html: { multiple: true, data: { placeholder: 'Choose a user'}, class: 'chzn-select' } }) %>
 
     <%= form_element(f, :default_sit_length, 'user', "Default sit length", 1, { label: false }) %>
 

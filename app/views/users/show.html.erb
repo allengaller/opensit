@@ -25,6 +25,7 @@
           <div class="my-actions">
             <%= link_to 'Start my profile', edit_registration_path(@user), :class => 'edit-profile-btn btn btn-primary btn-default' %>
           </div>
+        </div>
         <% else %>
 
           <% if !@user.who.blank? %>
