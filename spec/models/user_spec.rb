@@ -397,6 +397,17 @@ describe User do
           expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.feed.count }.from(0).to(1)
         end
       end
+
+      context 'privacy_setting: private' do
+        it 'hides private content' do
+          dan = create(:user)
+          dans_sit = create(:sit, user: dan)
+          gina = create(:user)
+          gina.follow! dan
+
+          expect { dan.privacy_setting = 'private'; dan.save! }.to change { gina.feed.count }.from(1).to(0)
+        end
+      end
     end
 
     describe "#private_stream=" do

@@ -27,7 +27,7 @@ class PagesController < ApplicationController
 
   def explore
     @user = current_user
-    @sits = Sit.newest_first.with_body.limit(20).paginate(:page => params[:page])
+    @sits = Sit.explore(@user).newest_first.with_body.limit(20).paginate(:page => params[:page])
     @suggested_users = @user.users_to_follow if @user
 
     @title = 'Explore'
