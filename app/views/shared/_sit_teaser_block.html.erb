@@ -18,7 +18,7 @@
       <%= small_avatar_of(sit.user) %>
     </div>
     <div class="details">
-      <div class="author-title"><%= username(sit.user) %> <%= teaser_title(sit) %></div>
+      <div class="author-title"><%= username(sit.user) %> <%= teaser_title(sit) %><br><%= sit.user.privacy_setting %></div>
       <div class="meta">
         <span class="date">
           <% if params[:year] %>

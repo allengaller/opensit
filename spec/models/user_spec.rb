@@ -335,7 +335,7 @@ describe User do
       it "returns an array of arrays of dates and counts"
     end
 
-    describe "#socialstream" do
+    describe "#feed" do
       context 'public journal' do
         before do
           Relationship.create(followed_id: buddha.id, follower_id: ananda.id)
@@ -346,21 +346,21 @@ describe User do
         end
 
         it "returns an array of other followed users' sits" do
-          expect(ananda.socialstream).to eq(
+          expect(ananda.feed).to eq(
             [first_sit, second_sit, third_sit, fourth_sit])
         end
 
         it "does not return the oldest sits first" do
-          expect(ananda.socialstream).to_not eq(
+          expect(ananda.feed).to_not eq(
             [fourth_sit, third_sit, second_sit, first_sit])
         end
 
-        it "should not shows stubs in socialstream" do
+        it "should not shows stubs in feed" do
           stub = create(:sit, user: buddha, body: '')
           has_body = create(:sit, user: buddha, body: 'In the seeing, only the seen')
           expect(buddha.sits.count).to eq(6)
-          expect(ananda.socialstream.count).to eq(5)
-          expect(ananda.socialstream).to_not include stub
+          expect(ananda.feed.count).to eq(5)
+          expect(ananda.feed).to_not include stub
         end
       end
 
@@ -370,7 +370,7 @@ describe User do
           dans_sit = create(:sit, user: dan)
           gina = create(:user)
 
-          expect { gina.follow! dan }.to change { gina.socialstream.count }.from(0).to(1)
+          expect { gina.follow! dan }.to change { gina.feed.count }.from(0).to(1)
         end
       end
 
@@ -382,7 +382,7 @@ describe User do
           # Gina wants to see Dan's content, but can't until he follows her
           gina.follow! dan
 
-          expect { dan.follow! gina }.to change { gina.socialstream.count }.from(0).to(1)
+          expect { dan.follow! gina }.to change { gina.feed.count }.from(0).to(1)
         end
       end
 
@@ -391,10 +391,10 @@ describe User do
           dan = create(:user, privacy_setting: 'selected_users')
           dans_sit = create(:sit, user: dan, body: 'personal details i aint keen to share with everyone')
           gina = create(:user)
-          # Gina wants to see Dan's content, but Gina can't until Dan adds her as an authorised user
+          # Gina wants to see Dan's content, but can't until he adds her as an authorised user
           gina.follow! dan
 
-          expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.socialstream.count }.from(0).to(1)
+          expect { AuthorisedUser.create!(user_id: dan.id, authorised_user_id: gina.id) }.to change { gina.feed.count }.from(0).to(1)
         end
       end
     end

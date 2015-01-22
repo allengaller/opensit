@@ -94,13 +94,7 @@ class Sit < ActiveRecord::Base
 
   # Returns sits from the users being followed by the given user.
   def self.from_users_followed_by(user)
-    followed_user_ids = "SELECT followed_id FROM relationships
-                         WHERE follower_id = :user_id"
-
-    # where("(user_id IN (#{followed_user_ids}) AND private = false) OR user_id = :user_id",
-          # user_id: user.id)
-
-    # Sits by other users I follow, who have privacy_setting = 'selected_users', and added me to their 'selected_users'
+    # Sits by other users I follow, who have privacy_setting = 'selected_users', and added me as a selected users
     selected_users = User.select('users.id')
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
       .where('authorised_users.authorised_user_id = ?', user.id)
@@ -116,7 +110,7 @@ class Sit < ActiveRecord::Base
       .where("users.privacy_setting = 'public'")
       .where("users.id IN (?)", user.followed_user_ids)
 
-    where("sits.user_id IN (?)", selected_users + following + public_users)
+    where("sits.user_id IN (?)", selected_users + following + public_users + [user.id])
   end
 
   def commenters

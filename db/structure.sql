@@ -646,7 +646,8 @@ CREATE TABLE users (
     sits_count integer DEFAULT 0,
     streak integer DEFAULT 0,
     privacy_setting character varying(255) DEFAULT 'public'::character varying,
-    authorised_users character varying(255) DEFAULT ''::character varying
+    authorised_users character varying(255) DEFAULT ''::character varying,
+    receive_email boolean DEFAULT true
 );
 
 
@@ -1175,6 +1176,8 @@ INSERT INTO schema_migrations (version) VALUES ('20141023191934');
 INSERT INTO schema_migrations (version) VALUES ('20141218153117');
 
 INSERT INTO schema_migrations (version) VALUES ('20141222165045');
+
+INSERT INTO schema_migrations (version) VALUES ('20141223144659');
 
 INSERT INTO schema_migrations (version) VALUES ('20150119200531');
 

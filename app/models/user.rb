@@ -245,7 +245,7 @@ class User < ActiveRecord::Base
     return @obj
   end
 
-  def socialstream
+  def feed
     Sit.from_users_followed_by(self).with_body.newest_first
   end
 
