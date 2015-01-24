@@ -38,7 +38,7 @@ $(document).ready(function(){
 
   if ($('.sit_type .diary_type').is(':checked')) {
     $('.new-sit-title').show();
-  };
+  }
 
   // Privacy dropdown
   $('.new-sit .dropdown-menu').click(function(e) {
@@ -76,10 +76,17 @@ $(document).ready(function(){
   $('.expand-profile').click( function(e) {
     e.preventDefault();
     $('.full-profile').slideToggle();
-  })
+  });
 
-  // EDIT PROFILE / Authorised users
-  $("#user_authorised_users").chosen();
+  // EDIT PROFILE / Selected users
+  $('.user_privacy_setting .radio').click(function() {
+    if ($(this).find('input').attr('id') == 'user_privacy_setting_selected_users') {
+      $('.selected_users_chosen').show();
+    } else {
+      $('.selected_users_chosen').hide();
+    }
+  });
+  $("#user_selected_users").chosen();
 
   // LIKES / a sit
   $('#like_button').on('click', '.toggle-like', function(e) {
@@ -162,13 +169,13 @@ $(document).ready(function(){
   // Finish this goal?
   $('.goal').hover(function() {
     $(this).find('.finish-goal').toggle();
-  })
+  });
 
   // Add another one
   $('.toggle-goal-form').click( function (e) {
     e.stopPropagation();
     $('.new-goal-form').toggle();
-  })
+  });
 
   // Show completed
   $('.show-completed').click( function(e) {
@@ -208,5 +215,5 @@ $(document).on('page:change', function() {
 
 // https://github.com/Nerian/bootstrap-wysihtml5-rails
 $(document).on('page:load', function(){
-  window['rangy'].initialized = false
-})
+  window['rangy'].initialized = false;
+});

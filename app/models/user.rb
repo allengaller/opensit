@@ -5,7 +5,7 @@ class User < ActiveRecord::Base
                   :password, :email, :first_name, :gender, :last_name,
                   :practice, :style, :user_type, :username,
                   :who, :why, :password_confirmation, :remember_me, :avatar,
-                  :authorised_users, :privacy_setting, :receive_email
+                  :privacy_setting, :receive_email, :selected_users
 
   has_many :sits, :dependent => :destroy
   has_many :messages_received, -> { where receiver_deleted: false }, class_name: 'Message', foreign_key: 'to_user_id'
@@ -24,8 +24,8 @@ class User < ActiveRecord::Base
                             source: :favourable,
                             source_type: "Sit"
   has_many :goals, :dependent => :destroy
-
   has_many :reports, :dependent => :destroy
+  has_many :authorised_users, :dependent => :destroy
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
@@ -35,9 +35,6 @@ class User < ActiveRecord::Base
   validates_uniqueness_of :username
   validates :username, no_empty_spaces: true
   # validates :username, unique_page_name: true
-
-  # Authorised users, for 'selected_users' privacy option
-  serialize :authorised_users
 
   # Textacular: search these columns only
   extend Searchable(:username, :first_name, :last_name, :city, :country)
@@ -249,6 +246,10 @@ class User < ActiveRecord::Base
     Sit.from_users_followed_by(self).with_body.newest_first
   end
 
+  ##
+  # PRIVACY
+  ##
+
   def private_journal?
     return true if privacy_setting == 'private'
     return false
@@ -266,9 +267,25 @@ class User < ActiveRecord::Base
     write_attribute(:privacy_setting, value)
   end
 
-  def favourited?(sit_id)
-    favourites.where(favourable_type: "Sit", favourable_id: sit_id).exists?
+  def selected_users=(users)
+    users.reject! { |c| c.empty? }
+
+    # Clear out old users
+    authorised_users.delete_all
+
+    # Add new records
+    users.each do |authorised_user|
+      AuthorisedUser.create!(user_id: id, authorised_user_id: authorised_user)
+    end
   end
+
+  def selected_users
+    authorised_users.collect { |u| u.authorised_user_id }
+  end
+
+  ##
+  # RELATIONSHIPS
+  ##
 
   def following?(other_user)
     relationships.find_by_followed_id(other_user.id) ? true : false
@@ -305,6 +322,10 @@ class User < ActiveRecord::Base
     followed_user_ids & follower_ids
   end
 
+  ##
+  # NOTIFICATIONS
+  ##
+
   def unread_count
     messages_received.unread.count unless messages_received.unread.count.zero?
   end
@@ -313,17 +334,9 @@ class User < ActiveRecord::Base
     notifications.unread.count unless notifications.unread.count.zero?
   end
 
-  # Overwrite Devise function to allow profile update with password requirement
-  # http://stackoverflow.com/questions/4101220/rails-3-devise-how-to-skip-the-current-password-when-editing-a-registratio?rq=1
-  def update_with_password(params={})
-    if params[:password].blank?
-      params.delete(:password)
-      params.delete(:password_confirmation) if params[:password_confirmation].blank?
-    end
-    update_attributes(params)
-  end
-
+  ##
   # LIKES
+  ##
 
   def like!(obj)
     Like.create!(likeable_id: obj.id, likeable_type: obj.class.name, user_id: self.id)
@@ -338,7 +351,9 @@ class User < ActiveRecord::Base
     like.destroy
   end
 
+  ##
   # STATS
+  ##
 
   def last_update
     self.sits.newest_first.first.created_at
@@ -381,6 +396,20 @@ class User < ActiveRecord::Base
     end
 
     streak_count
+  end
+
+  # Overwrite Devise function to allow profile update with password requirement
+  # http://stackoverflow.com/questions/4101220/rails-3-devise-how-to-skip-the-current-password-when-editing-a-registratio?rq=1
+  def update_with_password(params={})
+    if params[:password].blank?
+      params.delete(:password)
+      params.delete(:password_confirmation) if params[:password_confirmation].blank?
+    end
+    update_attributes(params)
+  end
+
+  def favourited?(sit_id)
+    favourites.where(favourable_type: "Sit", favourable_id: sit_id).exists?
   end
 
   ##
