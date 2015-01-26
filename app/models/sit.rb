@@ -92,46 +92,16 @@ class Sit < ActiveRecord::Base
     end
   end
 
-  # Returns sits from the users being followed by the given user, respecting their privacy settings
-  def self.from_users_followed_by(user)
-    # Sits by other users I follow, who have privacy_setting = 'selected_users', and added me as a selected users
-    selected_users = User.select('users.id')
-      .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-      .where('authorised_users.authorised_user_id = ?', user.id)
-      .where('authorised_users.user_id IN (?)', user.followed_user_ids)
-
-    # Sits by other users I follow, who have privacy_setting = 'following', and follow me
-    following = User.select('users.id')
-      .where("users.id IN (?)", user.mutual_following_ids)
-      .where("users.privacy_setting = 'following'")
-
-    # Sits by other users I follow, who have privacy_setting = 'public'
-    public_users = User.select('users.id')
-      .where("users.privacy_setting = 'public'")
-      .where("users.id IN (?)", user.followed_user_ids)
-
-    where("sits.user_id IN (?)", selected_users + following + public_users + [user.id]) # include own sits
-  end
-
   def self.explore(user)
     # Sits by users who have privacy_setting = 'public'
     public_users = User.select('users.id')
       .where("users.privacy_setting = 'public'")
 
-    if !user
-      return where("sits.user_id IN (?)", public_users)
+    if user
+      # Pipe operator joins two arrays and removes duplicates
+      return where("sits.user_id IN (?)", user.users_whose_content_i_can_view | public_users)
     else
-      # Sits by users who have privacy_setting = 'selected_users', and added me as a selected users
-      selected_users = User.select('users.id')
-        .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-        .where('authorised_users.authorised_user_id = ?', user.id)
-
-      # Sits by other users I follow, who have privacy_setting = 'following', and follow me
-      following = User.select('users.id')
-        .where("users.id IN (?)", user.mutual_following_ids)
-        .where("users.privacy_setting = 'following'")
-
-      return where("sits.user_id IN (?)", selected_users + following + public_users).where.not(id: user.id)
+      return where("sits.user_id IN (?)", public_users)
     end
   end
 

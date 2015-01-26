@@ -243,7 +243,7 @@ class User < ActiveRecord::Base
   end
 
   def feed
-    Sit.from_users_followed_by(self).with_body.newest_first
+    Sit.where("sits.user_id IN (?)", users_whose_content_i_can_view + [id]).with_body.newest_first
   end
 
   ##
@@ -265,6 +265,22 @@ class User < ActiveRecord::Base
       sits.update_all(private: true)
     end
     write_attribute(:privacy_setting, value)
+  end
+
+  def users_whose_content_i_can_view
+    User.select('users.id')
+      .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
+      .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))
+        OR (users.id IN (?) AND users.privacy_setting = \'following\')
+        OR (users.privacy_setting = \'public\'
+        AND users.id IN (?))', id, followed_user_ids, mutual_following_ids, followed_user_ids)
+
+    # Cache and invalidate on each new relationship?
+  end
+
+  def can_view_content_of(other_user)
+    return true if other_user.privacy_setting == 'following' && other_user.following? self
+    return true if other_user.privacy_setting == 'selected_users' && AuthorisedUser.where(user_id: other_user.id, authorised_user_id: self.id).present?
   end
 
   def selected_users=(users)
