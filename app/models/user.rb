@@ -51,6 +51,11 @@ class User < ActiveRecord::Base
 
   # Scopes
   scope :newest_first, -> { order("created_at DESC") }
+  scope :privacy_selected_users, ->(user) { select('users.id')
+      .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
+      .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))', user.id, user.followed_user_ids) }
+  scope :privacy_following_users, ->(user) { select('users.id')
+      .where("users.id IN (?) AND users.privacy_setting = 'following'", user.mutual_following_ids) }
 
   # Used by url_helper to determine user path, eg; /buddha and /user/buddha
   def to_param
@@ -100,9 +105,18 @@ class User < ActiveRecord::Base
     sits.where("EXTRACT(year FROM created_at) = ?", year.to_s)
   end
 
-  def sits_by_month(month: month, year: year)
-    sits.where("EXTRACT(year FROM created_at) = ?
-      AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
+  def sits_by_month(month, year, current_user = nil)
+    if current_user = self
+      sits.where("EXTRACT(year FROM created_at) = ?
+        AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
+    elsif current_user
+      sits.where("EXTRACT(year FROM created_at) = ?
+        AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
+      .where('user_id in (?)', current_user.users_whose_content_i_can_view)
+    else
+      # Guests - public only
+      # Make where("sits.user_id IN (?)", public_users) a scope to use in EXPLORE too
+    end
   end
 
   def time_sat_this_month(month: month, year: year)
@@ -125,7 +139,7 @@ class User < ActiveRecord::Base
     @stats = {}
     @stats[:days_sat_this_month] = days_sat_in_date_range(Date.new(year.to_i, month.to_i, 01), Date.new(year.to_i, month.to_i, -1))
     @stats[:time_sat_this_month] = time_sat_this_month(month: month, year: year)
-    @stats[:entries_this_month] = sits_by_month(month: month, year: year).count
+    @stats[:entries_this_month] = sits_by_month(month, year).count
     @stats
   end
 
@@ -224,7 +238,7 @@ class User < ActiveRecord::Base
     # dates is an array of months: ["2014 10", "2014 9"]
     dates.each do |m|
       year, month = m
-      month_total = self.sits_by_month(month: month, year: year).count
+      month_total = self.sits_by_month(month, year).count
 
       if pointer != year
         year_total = self.sits_by_year(year).count
@@ -267,22 +281,27 @@ class User < ActiveRecord::Base
     write_attribute(:privacy_setting, value)
   end
 
-  def users_whose_content_i_can_view
-    User.select('users.id')
-      .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-      .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))
-        OR (users.id IN (?) AND users.privacy_setting = \'following\')
-        OR (users.privacy_setting = \'public\'
-        AND users.id IN (?))', id, followed_user_ids, mutual_following_ids, followed_user_ids)
+  def viewable_users
+    # User.select('users.id')
+    #   .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
+    #   .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))
+    #     OR (users.id IN (?) AND users.privacy_setting = \'following\')
+    #     OR (users.privacy_setting = \'public\'
+    #     AND users.id IN (?))', id, followed_user_ids, mutual_following_ids, followed_user_ids)
+    User.where.any_of(
+      User.privacy_selected_users(self),
+      User.privacy_following_users(self)
+    )
 
     # Cache and invalidate on each new relationship?
   end
 
   def can_view_content_of(other_user)
-    return true if other_user.privacy_setting == 'following' && other_user.following? self
+    return true if other_user.privacy_setting == 'following' && other_user.following?(self)
     return true if other_user.privacy_setting == 'selected_users' && AuthorisedUser.where(user_id: other_user.id, authorised_user_id: self.id).present?
   end
 
+  # Used to set selected_users on Account Settings form
   def selected_users=(users)
     users.reject! { |c| c.empty? }
 
@@ -295,8 +314,14 @@ class User < ActiveRecord::Base
     end
   end
 
+  # Used to get selected_users on Account Settings form
   def selected_users
     authorised_users.collect { |u| u.authorised_user_id }
+  end
+
+  # All users with public journals
+  def self.public_users
+    select('users.id').where("users.privacy_setting = 'public'")
   end
 
   ##

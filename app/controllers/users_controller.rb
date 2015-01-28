@@ -66,14 +66,14 @@ class UsersController < ApplicationController
     # Viewing your own profile
     if current_user == @user
       Sit.unscoped do
-        @sits = @user.sits_by_month(month: month, year: year).newest_first
+        @sits = @user.sits_by_month(month, year, current_user).newest_first
       end
       @stats = @user.get_monthly_stats(month, year)
 
     # Viewing someone elses profile
     else
       if !@user.private_journal?
-        @sits = @user.sits_by_month(month: month, year: year).newest_first
+        @sits = @user.sits_by_month(month, year, current_user).newest_first
         @stats = @user.get_monthly_stats(month, year)
       end
     end

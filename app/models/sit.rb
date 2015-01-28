@@ -23,6 +23,8 @@ class Sit < ActiveRecord::Base
   scope :today, -> { where("DATE(created_at) = ?", Date.today) }
   scope :yesterday, -> { where("DATE(created_at) = ?", Date.yesterday) }
   scope :with_body, -> { where.not(body: '')}
+  scope :users_i_can_view, ->(user = nil) { where('user_id IN (?)', user.viewable_users) }
+  scope :public_sits, -> { where('user_id IN (?)', User.public_users) }
 
   # Pagination: sits per page
   self.per_page = 20
@@ -93,15 +95,11 @@ class Sit < ActiveRecord::Base
   end
 
   def self.explore(user)
-    # Sits by users who have privacy_setting = 'public'
-    public_users = User.select('users.id')
-      .where("users.privacy_setting = 'public'")
-
     if user
       # Pipe operator joins two arrays and removes duplicates
-      return where("sits.user_id IN (?)", user.users_whose_content_i_can_view | public_users)
+      return where.any_of(users_i_can_view(user), public_sits)
     else
-      return where("sits.user_id IN (?)", public_users)
+      return public_sits
     end
   end
 

@@ -56,6 +56,7 @@ gem 'jquery-turbolinks'
 gem 'protected_attributes' # Smoother upgrade to rails 4, provides attr_accessible
 gem 'textacular'
 gem 'split', :require => 'split/dashboard'
+gem 'activerecord_any_of'
 
 # Devise authentication
 gem 'devise'

@@ -65,7 +65,7 @@
       <% if @sits %>
         <div class="month-view">
 
-        <% if !@stats[:days_sat_this_month].zero? %>
+        <% if !@sits.empty? %>
           <select class="date_range_select">
             <%= timeline(@by_month[:sitting_totals]) %>
           </select>
@@ -73,7 +73,7 @@
 
           <div class="month_stats_container">
             <p class="month_stats">
-              <% if @user.sits.empty? %>
+              <% if @sits.empty? %>
                 Nothing to see here, yet.
               <% elsif @stats[:days_sat_this_month].zero? %>
                 Zzzzz... Nothing logged this month. <a class="previous" href="?year=<%=@first_month[0]%>&month=<%=@first_month[1]%>">Check out their latest journal entries.</a>

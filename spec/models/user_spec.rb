@@ -249,14 +249,14 @@ describe User do
 
     describe "#sits_by_month" do
       it "returns all sits for a user for a given month and year" do
-        expect(buddha.sits_by_month(month: this_month, year: this_year))
+        expect(buddha.sits_by_month(this_month, this_year))
           .to match_array(
             [first_sit, second_sit, third_sit]
           )
       end
 
       it "does not include sits outside of a given month and year" do
-        expect(buddha.sits_by_month(month: this_month, year: this_year))
+        expect(buddha.sits_by_month(this_month, this_year))
           .to_not include(fourth_sit)
       end
     end
