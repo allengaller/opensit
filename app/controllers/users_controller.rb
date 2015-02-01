@@ -38,7 +38,7 @@ class UsersController < ApplicationController
   def show
     @user = User.where("lower(username) = lower(?)", params[:username]).first!
     @total_hours = @user.total_hours_sat
-    @by_month = @user.journal_range
+    @by_month = @user.journal_range(current_user)
 
     month = params[:month] ? params[:month] : Date.today.month
     year = params[:year] ? params[:year] : Date.today.year

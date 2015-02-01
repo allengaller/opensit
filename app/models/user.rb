@@ -54,7 +54,7 @@ class User < ActiveRecord::Base
   # Privacy
   scope :privacy_selected_users, ->(user) { select('users.id')
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-      .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))', user.id, user.followed_user_ids) }
+      .where('(authorised_users.authorised_user_id = ?)', user.id) }
   scope :privacy_following_users, ->(user) { select('users.id')
       .where("users.id IN (?) AND users.privacy_setting = 'following'", user.mutual_following_ids) }
 
@@ -201,10 +201,15 @@ class User < ActiveRecord::Base
   end
 
   # Returns list of months a user has sat, and sitting totals for each month
-  def journal_range
+  def journal_range(current_user = nil)
     return false if self.sits.empty?
 
-    first_sit = Sit.where("user_id = ?", self.id).order(:created_at).first.created_at.strftime("%Y %m").split(' ')
+    if current_user && self == current_user
+      first_sit = Sit.unscoped.where("user_id = ?", self.id).order(:created_at).first.created_at.strftime("%Y %m").split(' ')
+    else
+      first_sit = Sit.where("user_id = ?", self.id).order(:created_at).first.created_at.strftime("%Y %m").split(' ')
+    end
+
     year, month = Time.now.strftime("%Y %m").split(' ')
     dates = []
 
@@ -271,21 +276,26 @@ class User < ActiveRecord::Base
   end
 
   def privacy_setting=(value)
-    # If we're moving away from a private journal, need to remove
-    # the private marker all sits
-    if self.privacy_setting == 'private' && value != 'private'
-      sits.unscoped.update_all(private: false)
-    # Make my journal private - mark all sits as private
-    elsif value == 'private'
-      sits.update_all(private: true)
+    if value.in? ['public', 'following', 'selected_users', 'private']
+      # If we're moving away from a private journal, need to remove
+      # the private marker all sits
+      if self.privacy_setting == 'private' && value != 'private'
+        sits.unscoped.update_all(private: false)
+      # Make my journal private - mark all sits as private
+      elsif value == 'private'
+        sits.update_all(private: true)
+      end
+      write_attribute(:privacy_setting, value)
+    else
+      raise ArgumentError
     end
-    write_attribute(:privacy_setting, value)
   end
 
   def viewable_users
     User.select('users.id').where.any_of(
       User.privacy_selected_users(self),
-      User.privacy_following_users(self)
+      User.privacy_following_users(self),
+      User.public_users
     )
   end
 
@@ -296,6 +306,11 @@ class User < ActiveRecord::Base
   def can_view_content_of(other_user)
     return true if other_user.privacy_setting == 'following' && other_user.following?(self)
     return true if other_user.privacy_setting == 'selected_users' && AuthorisedUser.where(user_id: other_user.id, authorised_user_id: self.id).present?
+  end
+
+  # All users with public journals
+  def self.public_users
+    select('users.id').where("users.privacy_setting = 'public'")
   end
 
   # Used to set selected_users on Account Settings form
@@ -314,11 +329,6 @@ class User < ActiveRecord::Base
   # Used to get selected_users on Account Settings form
   def selected_users
     authorised_users.collect { |u| u.authorised_user_id }
-  end
-
-  # All users with public journals
-  def self.public_users
-    select('users.id').where("users.privacy_setting = 'public'")
   end
 
   ##

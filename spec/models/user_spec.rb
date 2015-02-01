@@ -410,42 +410,73 @@ describe User do
       end
     end
 
-    describe "#private_stream=" do
-      context "when the argument is 'true'" do
+    describe "#privacy_setting=" do
+      context "private" do
         it "updates all of a user's sits to be private" do
-          sit = create(:sit, :public, user: user)
+          create(:sit, :public, user: buddha)
+          # puts user.privacy_setting
+          # puts user.sits.inspect
+          # user.privacy_setting=('private');
+          # user.save!
+          # puts user.privacy_setting
+          # puts user.sits.inspect
 
-          expect { user.private_stream=('true') }
-            .to change { user.sits.where(private: true).count }.from(0).to(1)
-        end
-
-        it "sets the user's private stream to true" do
-          expect { user.private_stream=('TRUE') }
-            .to change { user.private_stream }.from(false).to(true)
+          expect { buddha.privacy_setting=('private'); buddha.save! }
+            .to change { buddha.sits.where(private: true).count }.from(0).to(1)
         end
       end
 
-      context "when the argument is 'false'" do
+      context "when the argument is not private" do
         it "updates all of a user's sits to not be private" do
           sit = create(:sit, :private, user: user)
 
-          expect { user.private_stream=('false') }
+          expect { user.privacy_setting=('following') }
             .to change { user.sits.where(private: false).count }.from(0).to(1)
-        end
-
-        it "sets the user's private stream to false" do
-          user.private_stream = 'true'
-          expect { user.private_stream=('FALSE') }
-            .to change { user.private_stream }.from(true).to(false)
         end
       end
 
-      context "when the argument is neither 'true' nor 'false'" do
+      context "when the argument is not valid" do
         it "raises an ArgumentError" do
-          expect { user.private_stream=('bad_argument') }.to raise_error(
-            ArgumentError,
-            "Argument must be either 'true' or 'false'"
+          expect { user.privacy_setting=('bad_argument') }.to raise_error(
+            ArgumentError
           )
+        end
+      end
+    end
+
+    describe '#viewable_users' do
+      context 'new user with privacy_setting: public' do
+        it 'returns user I can view' do
+          expect(buddha.viewable_users.count).to eq 1 # Ananda
+          expect { create(:user) }
+            .to change { buddha.viewable_users.count }.from(1).to(2)
+        end
+      end
+
+      context 'new user with privacy_setting: following' do
+        it 'returns user I can view' do
+          expect(buddha.viewable_users.count).to eq 1 # Ananda
+          deva = create(:user, privacy_setting: 'following')
+          deva.follow! buddha
+          expect { buddha.follow! deva }
+            .to change { buddha.viewable_users.count }.from(1).to(2)
+        end
+      end
+
+      context 'new user with privacy_setting: selected_users' do
+        it 'returns user I can view' do
+          expect(buddha.viewable_users.count).to eq 1 # Ananda
+          deva = create(:user, privacy_setting: 'selected_users')
+          expect { AuthorisedUser.create!(user_id: deva.id, authorised_user_id: buddha.id) }
+            .to change { buddha.viewable_users.count }.from(1).to(2)
+        end
+      end
+
+      context 'new user with privacy_setting: private' do
+        it 'doesnt load user' do
+          expect(buddha.viewable_users.count).to eq 1 # Ananda
+          create(:user, privacy_setting: 'private')
+          expect(buddha.viewable_users.count).to eq 1
         end
       end
     end
