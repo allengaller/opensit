@@ -4,6 +4,38 @@ describe Sit do
   let(:buddha) { create(:buddha) }
   let(:ananda) { create(:ananda) }
 
+  describe '.explore' do
+    before :each do
+      @allah = create(:user, privacy_setting: 'following')
+      @allahs_sit = create(:sit, user: @allah)
+      @jesus = create(:user, privacy_setting: 'selected_users')
+      @jesusz_sit = create(:sit, user: @jesus)
+      dave = create(:user)
+      @daves_sit = create(:sit, user: dave)
+      @daves_filthy_secret = create(:sit, user: @dave, private: true)
+    end
+
+    context 'guest' do
+      it 'returns public sits only' do
+        expect(Sit.explore(nil)).to eq [@daves_sit]
+      end
+    end
+
+    context 'registered user' do
+      it 'factors in following settings' do
+        @allah.follow! buddha
+        expect(Sit.explore(buddha)).to eq [@allahs_sit, @daves_sit]
+      end
+
+      it 'factors in selected_user settings' do
+        AuthorisedUser.create!(user_id: @jesus.id, authorised_user_id: buddha.id)
+        expect(Sit.explore(buddha)).to eq [@jesusz_sit, @daves_sit]
+      end
+    end
+
+  end
+
+
   describe '#viewable?' do
 
     context 'public' do
