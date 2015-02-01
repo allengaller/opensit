@@ -4,11 +4,24 @@ describe Sit do
   let(:buddha) { create(:buddha) }
   let(:ananda) { create(:ananda) }
 
-  describe 'privacy settings' do
+  describe '#viewable?' do
 
-  	it 'is not viewable if private'
+    context 'public' do
+      before do
+        @dan = create(:user)
+        @sit = create(:sit, user: @dan)
+      end
 
-		# Selected users only
+      it 'viewable by owner' do
+        expect(@sit.viewable? @dan).to eq true
+      end
+
+      it 'viewable by anyone' do
+        expect(@sit.viewable? buddha).to eq true
+        expect(@sit.viewable? ananda).to eq true
+      end
+    end
+
 		context 'selected_users' do
 			before do
 				@dan = create(
@@ -32,7 +45,6 @@ describe Sit do
 	  	end
 	  end
 
-  	# Only people I follow
   	context 'following' do
   		before do
 				@dan = create(:user, privacy_setting: 'following')
@@ -54,6 +66,24 @@ describe Sit do
 	  		expect(@sit.viewable? buddha).to eq false
 	  	end
 	  end
+
+    context 'private' do
+      before do
+        @dan = create(
+          :user,
+          privacy_setting: 'private',
+        )
+        @sit = create(:sit, user: @dan)
+      end
+
+      it 'viewable by owner' do
+        expect(@sit.viewable? @dan).to eq true
+      end
+
+      it 'not viewable by anyone else' do
+        expect(@sit.viewable? buddha).to eq false
+      end
+    end
   end
 
   describe 'creating a user' do
