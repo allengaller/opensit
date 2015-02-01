@@ -96,7 +96,7 @@ class Sit < ActiveRecord::Base
 
   def self.explore(user)
     if user
-      return where.any_of(content_i_can_view(user), public_sits)
+      return content_i_can_view(user)
     else
       return public_sits
     end

@@ -357,7 +357,7 @@ describe User do
 
         it "should not shows stubs in feed" do
           stub = create(:sit, user: buddha, body: '')
-          has_body = create(:sit, user: buddha, body: 'In the seeing, only the seen')
+          create(:sit, user: buddha, body: 'In the seeing, only the seen')
           expect(buddha.sits.count).to eq(6)
           expect(ananda.feed.count).to eq(5)
           expect(ananda.feed).to_not include stub
@@ -367,17 +367,17 @@ describe User do
       context 'privacy_setting: public (default)' do
         it 'returns public sits' do
           dan = create(:user)
-          dans_sit = create(:sit, user: dan)
+          create(:sit, user: dan)
           gina = create(:user)
 
-          expect { gina.follow! dan }.to change { gina.feed.count }.from(0).to(1)
+          expect { gina.follow! dan }.to change { gina.reload.feed.count }.from(0).to(1)
         end
       end
 
       context 'privacy_setting: following' do
         it 'only returns sit if user is following the current user' do
           dan = create(:user, privacy_setting: 'following')
-          dans_sit = create(:sit, user: dan)
+          create(:sit, user: dan)
           gina = create(:user)
           # Gina wants to see Dan's content, but can't until he follows her
           gina.follow! dan
@@ -389,7 +389,7 @@ describe User do
       context 'privacy_setting: selected_users' do
         it 'only returns sit if user is following the current user' do
           dan = create(:user, privacy_setting: 'selected_users')
-          dans_sit = create(:sit, user: dan, body: 'personal details i aint keen to share with everyone')
+          create(:sit, user: dan, body: 'personal details i aint keen to share with everyone')
           gina = create(:user)
           # Gina wants to see Dan's content, but can't until he adds her as an authorised user
           gina.follow! dan
@@ -422,13 +422,13 @@ describe User do
           # puts user.sits.inspect
 
           expect { buddha.privacy_setting=('private'); buddha.save! }
-            .to change { buddha.sits.where(private: true).count }.from(0).to(1)
+            .to change { buddha.reload.sits.where(private: true).count }.from(0).to(1)
         end
       end
 
       context "when the argument is not private" do
         it "updates all of a user's sits to not be private" do
-          sit = create(:sit, :private, user: user)
+          create(:sit, :private, user: user)
 
           expect { user.privacy_setting=('following') }
             .to change { user.sits.where(private: false).count }.from(0).to(1)
@@ -457,8 +457,7 @@ describe User do
         it 'returns user I can view' do
           expect(buddha.viewable_users.count).to eq 1 # Ananda
           deva = create(:user, privacy_setting: 'following')
-          deva.follow! buddha
-          expect { buddha.follow! deva }
+          expect { deva.follow! buddha }
             .to change { buddha.viewable_users.count }.from(1).to(2)
         end
       end
@@ -473,10 +472,47 @@ describe User do
       end
 
       context 'new user with privacy_setting: private' do
-        it 'doesnt load user' do
+        it 'does not return user' do
           expect(buddha.viewable_users.count).to eq 1 # Ananda
           create(:user, privacy_setting: 'private')
           expect(buddha.viewable_users.count).to eq 1
+        end
+      end
+    end
+
+    describe '#viewable_and_following_users' do
+      context 'new user with privacy_setting: public, who I follow' do
+        it 'returns user' do
+          deva = create(:user)
+          expect { buddha.follow! deva }
+            .to change { buddha.reload.viewable_and_following_users.count }.from(0).to(1)
+        end
+      end
+
+      context 'new user with privacy_setting: following, who I follow' do
+        it 'returns user I can view' do
+          deva = create(:user, privacy_setting: 'following')
+          deva.follow! buddha
+          expect { buddha.follow! deva }
+            .to change { buddha.reload.viewable_and_following_users.count }.from(0).to(1)
+        end
+      end
+
+      context 'new user with privacy_setting: selected_users, who I follow' do
+        it 'returns user I can view' do
+          deva = create(:user, privacy_setting: 'selected_users')
+          AuthorisedUser.create!(user_id: deva.id, authorised_user_id: buddha.id)
+          expect { buddha.follow! deva }
+            .to change { buddha.reload.viewable_and_following_users.count }.from(0).to(1)
+        end
+      end
+
+      context 'new user with privacy_setting: private, who I follow' do
+        it 'does not return user' do
+          expect(buddha.viewable_users.count).to eq 1 # Ananda
+          deva = create(:user, privacy_setting: 'private')
+          buddha.follow! deva
+          expect(buddha.reload.viewable_and_following_users.count).to eq 0
         end
       end
     end

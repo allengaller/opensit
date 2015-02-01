@@ -56,7 +56,7 @@ class User < ActiveRecord::Base
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
       .where('(authorised_users.authorised_user_id = ?)', user.id) }
   scope :privacy_following_users, ->(user) { select('users.id')
-      .where("users.id IN (?) AND users.privacy_setting = 'following'", user.mutual_following_ids) }
+      .where("users.id IN (?) AND users.privacy_setting = 'following'", user.follower_ids) }
 
   # Used by url_helper to determine user path, eg; /buddha and /user/buddha
   def to_param
@@ -300,7 +300,8 @@ class User < ActiveRecord::Base
   end
 
   def viewable_and_following_users
-    viewable_users | followed_user_ids
+    # Sneaky & operator returns only IDs that feature in both arrays
+    viewable_users & followed_users
   end
 
   def can_view_content_of(other_user)
