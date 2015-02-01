@@ -23,7 +23,7 @@ class Sit < ActiveRecord::Base
   scope :today, -> { where("DATE(created_at) = ?", Date.today) }
   scope :yesterday, -> { where("DATE(created_at) = ?", Date.yesterday) }
   scope :with_body, -> { where.not(body: '') }
-  scope :content_i_can_view, ->(user = nil) { where('user_id IN (?)', user.viewable_users) }
+  scope :content_i_can_view, ->(user) { where('user_id IN (?)', user.viewable_users) }
   scope :public_sits, -> { where('user_id IN (?)', User.public_users) }
 
   # Pagination: sits per page
@@ -95,11 +95,8 @@ class Sit < ActiveRecord::Base
   end
 
   def self.explore(user)
-    if user
-      return content_i_can_view(user)
-    else
-      return public_sits
-    end
+    return content_i_can_view(user) if user
+    return public_sits
   end
 
   ##
