@@ -22,7 +22,7 @@ class Sit < ActiveRecord::Base
   scope :newest_first, -> { order("created_at DESC") }
   scope :today, -> { where("DATE(created_at) = ?", Date.today) }
   scope :yesterday, -> { where("DATE(created_at) = ?", Date.yesterday) }
-  scope :with_body, -> { where.not(body: '')}
+  scope :with_body, -> { where.not(body: '') }
   scope :users_i_can_view, ->(user = nil) { where('user_id IN (?)', user.viewable_users) }
   scope :public_sits, -> { where('user_id IN (?)', User.public_users) }
 
@@ -96,7 +96,6 @@ class Sit < ActiveRecord::Base
 
   def self.explore(user)
     if user
-      # Pipe operator joins two arrays and removes duplicates
       return where.any_of(users_i_can_view(user), public_sits)
     else
       return public_sits

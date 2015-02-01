@@ -34,7 +34,6 @@ class User < ActiveRecord::Base
   validates :username, length: { minimum: 3, maximum: 20 }
   validates_uniqueness_of :username
   validates :username, no_empty_spaces: true
-  # validates :username, unique_page_name: true
 
   # Textacular: search these columns only
   extend Searchable(:username, :first_name, :last_name, :city, :country)
@@ -51,6 +50,8 @@ class User < ActiveRecord::Base
 
   # Scopes
   scope :newest_first, -> { order("created_at DESC") }
+
+  # Privacy
   scope :privacy_selected_users, ->(user) { select('users.id')
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
       .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))', user.id, user.followed_user_ids) }
@@ -257,7 +258,7 @@ class User < ActiveRecord::Base
   end
 
   def feed
-    Sit.where("sits.user_id IN (?)", users_whose_content_i_can_view + [id]).with_body.newest_first
+    Sit.where("user_id IN (?)", viewable_and_following_users).with_body.newest_first
   end
 
   ##
@@ -282,18 +283,14 @@ class User < ActiveRecord::Base
   end
 
   def viewable_users
-    # User.select('users.id')
-    #   .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-    #   .where('(authorised_users.authorised_user_id = ? AND users.id IN (?))
-    #     OR (users.id IN (?) AND users.privacy_setting = \'following\')
-    #     OR (users.privacy_setting = \'public\'
-    #     AND users.id IN (?))', id, followed_user_ids, mutual_following_ids, followed_user_ids)
-    User.where.any_of(
+    User.select('users.id').where.any_of(
       User.privacy_selected_users(self),
       User.privacy_following_users(self)
     )
+  end
 
-    # Cache and invalidate on each new relationship?
+  def viewable_and_following_users
+    viewable_users | followed_user_ids
   end
 
   def can_view_content_of(other_user)
