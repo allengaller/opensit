@@ -331,10 +331,6 @@ describe User do
       end
     end
 
-    describe "#journal_range" do
-      it "returns an array of arrays of dates and counts"
-    end
-
     describe "#feed" do
       context 'public journal' do
         before do
@@ -401,7 +397,7 @@ describe User do
       context 'privacy_setting: private' do
         it 'hides private content' do
           dan = create(:user)
-          dans_sit = create(:sit, user: dan)
+          create(:sit, user: dan)
           gina = create(:user)
           gina.follow! dan
 
@@ -513,6 +509,48 @@ describe User do
           deva = create(:user, privacy_setting: 'private')
           buddha.follow! deva
           expect(buddha.reload.viewable_and_following_users.count).to eq 0
+        end
+      end
+    end
+
+    describe '#can_view_content_of' do
+      context 'user with private privacy setting' do
+        it 'returns false' do
+          deva = create(:user, privacy_setting: 'private')
+          expect(buddha.can_view_content_of(deva)).to eq false
+        end
+      end
+
+      context 'user with public privacy setting' do
+        it 'returns true' do
+          deva = create(:user, privacy_setting: 'public')
+          expect(buddha.can_view_content_of(deva)).to eq true
+        end
+      end
+
+      context 'user with selected_users privacy setting' do
+        it 'returns false if not whitelisted' do
+          deva = create(:user, privacy_setting: 'selected_users')
+          expect(buddha.can_view_content_of(deva)).to eq false
+        end
+
+        it 'returns true if whitelisted' do
+          deva = create(:user, privacy_setting: 'selected_users')
+          AuthorisedUser.create!(user_id: deva.id, authorised_user_id: buddha.id)
+          expect(buddha.can_view_content_of(deva)).to eq true
+        end
+      end
+
+      context 'user with following privacy setting' do
+        it 'returns false if not following' do
+          deva = create(:user, privacy_setting: 'following')
+          expect(buddha.can_view_content_of(deva)).to eq false
+        end
+
+        it 'returns true if following' do
+          deva = create(:user, privacy_setting: 'following')
+          expect { deva.follow! buddha }
+            .to change { buddha.can_view_content_of(deva) }.from(false).to(true)
         end
       end
     end

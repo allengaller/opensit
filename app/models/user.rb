@@ -307,6 +307,8 @@ class User < ActiveRecord::Base
   def can_view_content_of(other_user)
     return true if other_user.privacy_setting == 'following' && other_user.following?(self)
     return true if other_user.privacy_setting == 'selected_users' && AuthorisedUser.where(user_id: other_user.id, authorised_user_id: self.id).present?
+    return true if other_user.privacy_setting == 'public'
+    return false
   end
 
   # All users with public journals
