@@ -37,45 +37,31 @@ class UsersController < ApplicationController
   # GET /u/buddha
   def show
     @user = User.where("lower(username) = lower(?)", params[:username]).first!
-    @total_hours = @user.total_hours_sat
-    @by_month = @user.journal_range(current_user)
 
-    month = params[:month] ? params[:month] : Date.today.month
-    year = params[:year] ? params[:year] : Date.today.year
+    if (current_user && current_user.can_view_content_of(@user)) || @user.privacy_setting == 'public'
+      @journal = Journal.new(@user)
+      # @by_month = @user.journal_range(current_user)
 
-    index = @by_month[:list_of_months].index "#{year} #{sprintf '%02d', month}" if @user.sits.present?
+      month = params[:month] ? params[:month] : Date.today.month
+      year = params[:year] ? params[:year] : Date.today.year
+      # user.journal_next_prev_links(@by_month)
 
-    # Generate prev/next links
-    # .. for someone who's sat this month
-    if index
-      if @by_month[:list_of_months][index + 1]
-        @prev = @by_month[:list_of_months][index + 1].split(' ')
-      end
-
-      if !index.zero?
-        @next = @by_month[:list_of_months][index - 1].split(' ')
-      end
-    else
-      if @by_month
-        # Haven't sat this month - when was the last time they sat?
-        @first_month =  @by_month[:list_of_months].first.split(' ')
-      end
-      # Haven't sat at all
-    end
-
-    # Viewing your own profile
-    if current_user == @user
-      Sit.unscoped do
-        @sits = @user.sits_by_month(month, year, current_user).newest_first
-      end
-      @stats = @user.get_monthly_stats(month, year)
-
-    # Viewing someone elses profile
-    else
-      if !@user.private_journal?
-        @sits = @user.sits_by_month(month, year, current_user).newest_first
+      # Viewing your own profile
+      if current_user == @user
+        Sit.unscoped do
+          @sits = @user.sits_by_month(month, year, current_user).newest_first
+        end
         @stats = @user.get_monthly_stats(month, year)
+
+      # Viewing someone elses profile
+      else
+        if !@user.private_journal?
+          @sits = @user.sits_by_month(month, year, current_user).newest_first
+          @stats = @user.get_monthly_stats(month, year)
+        end
       end
+    else
+      @unviewable = true
     end
 
     @title = "#{@user.display_name}\'s meditation practice journal"

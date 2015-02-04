@@ -20,6 +20,7 @@ class Sit < ActiveRecord::Base
   # Scopes
   default_scope -> { where.not(private: true) }
   scope :newest_first, -> { order("created_at DESC") }
+  scope :oldest_first, -> { order("created_at ASC") }
   scope :today, -> { where("DATE(created_at) = ?", Date.today) }
   scope :yesterday, -> { where("DATE(created_at) = ?", Date.yesterday) }
   scope :with_body, -> { where.not(body: '') }

@@ -200,66 +200,27 @@ class User < ActiveRecord::Base
     sits.sum(:duration) / 60
   end
 
-  # Returns list of months a user has sat, and sitting totals for each month
-  def journal_range(current_user = nil)
-    return false if self.sits.empty?
+  # MERGE INTO THE ABOVE
+  def journal_next_prev_links(by_month)
+    index = @by_month[:list_of_months].index "#{year} #{sprintf '%02d', month}" if user.sits.present?
 
-    if current_user && self == current_user
-      first_sit = Sit.unscoped.where("user_id = ?", self.id).order(:created_at).first.created_at.strftime("%Y %m").split(' ')
+    # Generate prev/next links
+    # .. for someone who's sat this month
+    if index
+      if @by_month[:list_of_months][index + 1]
+        @prev = @by_month[:list_of_months][index + 1].split(' ')
+      end
+
+      if !index.zero?
+        @next = @by_month[:list_of_months][index - 1].split(' ')
+      end
     else
-      first_sit = Sit.where("user_id = ?", self.id).order(:created_at).first.created_at.strftime("%Y %m").split(' ')
-    end
-
-    year, month = Time.now.strftime("%Y %m").split(' ')
-    dates = []
-
-    # Build list of all months from first sit to current date
-    while [year.to_s, month.to_s.rjust(2, '0')] != first_sit
-      month = month.to_i
-      year = year.to_i
-      if month != 0
-        dates << [year, month]
-        month -= 1
-      else
-        year -= 1
-        month = 12
+      if @by_month
+        # Haven't sat this month - when was the last time they sat?
+        @first_month =  @by_month[:list_of_months].first.split(' ')
       end
+      # Haven't sat at all
     end
-
-    # Add first sitting month
-    dates << [first_sit[0].to_i, first_sit[1].to_i]
-
-    # Object to return, containing two arrays
-    @obj = {}
-
-    # Used to list number of sits per month
-    @obj[:sitting_totals] = []
-
-    # Used to provide a simple list of available months for dropdown select navigation
-    @obj[:list_of_months] = []
-
-    # Filter out any months with no activity
-    pointer = 2000
-
-    # dates is an array of months: ["2014 10", "2014 9"]
-    dates.each do |m|
-      year, month = m
-      month_total = self.sits_by_month(month, year).count
-
-      if pointer != year
-        year_total = self.sits_by_year(year).count
-        @obj[:sitting_totals] << [year, year_total] if !year_total.zero?
-      end
-
-      if month_total != 0
-        @obj[:sitting_totals] << [month, month_total]
-        @obj[:list_of_months] << "#{year} #{month.to_s.rjust(2, '0')}"
-      end
-
-      pointer = year
-    end
-
-    return @obj
   end
 
   def feed
@@ -305,6 +266,7 @@ class User < ActiveRecord::Base
   end
 
   def can_view_content_of(other_user)
+    return true if self == other_user
     return true if other_user.privacy_setting == 'following' && other_user.following?(self)
     return true if other_user.privacy_setting == 'selected_users' && AuthorisedUser.where(user_id: other_user.id, authorised_user_id: self.id).present?
     return true if other_user.privacy_setting == 'public'

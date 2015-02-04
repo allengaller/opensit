@@ -10,10 +10,10 @@
     <% end %>
 
   <%# Is this someone elses private journal? %>
-  <% if @user.private_journal? && (current_user != @user) %>
+  <% if @unviewable %>
     <div class="message-box">
-      <h2>Private.</h2>
-      <p>This is a private journal.</p>
+      <h2>Oops.</h2>
+      <p>This is private journal.</p>
     </div>
   <% else %>
     <% if !params[:month] && !params[:year] %>
@@ -67,7 +67,7 @@
 
         <% if !@sits.empty? %>
           <select class="date_range_select">
-            <%= timeline(@by_month[:sitting_totals]) %>
+            <%= timeline(@journal.dropdown_months) %>
           </select>
         <% end %>
 
@@ -90,7 +90,7 @@
             <%= render :partial => 'sits/day_journal', :locals => { :sit => sit } %>
           <% end %>
 
-          <% if !@stats[:days_sat_this_month].zero? %>
+          <% if false %>
             <div class="month_navigation col-md-12">
               <% if @prev %>
                 <a class="previous" href="?year=<%=@prev[0]%>&month=<%=@prev[1]%>">&larr; Previous</a>
