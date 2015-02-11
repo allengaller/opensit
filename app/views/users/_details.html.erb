@@ -19,7 +19,7 @@
     </div>
   <% end %>
 
-  <% if @user.total_hours_sat > 0 %>
+  <% if @user.journal.total_hours_sat > 0 %>
     <div class="info-block">
       <div class="icon"><i class="fa fa-dashboard"></i></div>
       <div class="value">Logged <%= @user.journal.total_hours_sat %> hours practice</div>

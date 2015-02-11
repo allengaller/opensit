@@ -12,6 +12,10 @@ class Journal
     @user.sits.present?
   end
 
+  def total_hours_sat
+    @user.sits.sum(:duration) / 60
+  end
+
   def latest_sit
     if viewing_my_journal?
       Sit.unscoped do
@@ -22,8 +26,8 @@ class Journal
     end
   end
 
-  def total_hours_sat
-    @user.sits.sum(:duration) / 60
+  def last_update
+    latest_sit.created_at
   end
 
   def first_sit
@@ -53,50 +57,12 @@ class Journal
     return dates
   end
 
-  def dropdown_months
-    return false if !has_sat?
+  def next_month
+    # check current_user
+  end
 
-    year, month = Time.now.strftime("%Y %m").split(' ')
-    dates = []
-
-    # Build list of all months from current date to first sit
-    while [year.to_s, month.to_s.rjust(2, '0')] != first_sit_date
-      month = month.to_i
-      year = year.to_i
-      if month != 0
-        dates << [year, month]
-        month -= 1
-      else
-        year -= 1
-        month = 12
-      end
-    end
-
-    # Add first sitting month
-    dates << [first_sit_date[0].to_i, first_sit_date[1].to_i]
-
-    # Filter out any months with no activity
-    pointer = 2000
-    dates_totals = []
-
-    # dates is an array of months: ["2014 10", "2014 09"]
-    dates.each do |m|
-      year, month = m
-      month_total = @user.sits_by_month(month, year).count
-
-      if pointer != year
-        year_total = @user.sits_by_year(year).count
-        dates_totals << [year, year_total] if !year_total.zero?
-      end
-
-      if month_total != 0
-        dates_totals << [month, month_total]
-      end
-
-      pointer = year
-    end
-
-    return dates_totals
+  def prev_month
+    # check current_user
   end
 
   def sits_by_year(year)
@@ -109,18 +75,15 @@ class Journal
         @user.sits.where("EXTRACT(year FROM created_at) = ?
           AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
       end
-    elsif @current_user.can_view_content_of(@user)
-      sits.where("EXTRACT(year FROM created_at) = ?
+    elsif @current_user.can_view_content_of(@user) || @user.public_journal?
+      @user.sits.where("EXTRACT(year FROM created_at) = ?
         AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
-      .where('user_id in (?)')
-    else
-      # Guests - public only
-      # Make where("sits.user_id IN (?)", public_users) a scope to use in EXPLORE too
+      # .where('user_id in (?)')
     end
   end
 
-  def time_sat_this_month(month: month, year: year)
-    minutes = sits.where("EXTRACT(year FROM created_at) = ?
+  def time_sat_this_month(month, year)
+    minutes = @user.sits.where("EXTRACT(year FROM created_at) = ?
       AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0')).sum(:duration)
     total_time = minutes.divmod(60)
     text = "#{total_time[0]} hours"
@@ -134,18 +97,17 @@ class Journal
     sits.where(created_at: date.beginning_of_day..date.end_of_day).present?
   end
 
-  # Convenience method for generating monthly stats for /u/
-  def get_monthly_stats(month, year)
-    @stats = {}
-    @stats[:days_sat_this_month] = days_sat_in_date_range(Date.new(year.to_i, month.to_i, 01), Date.new(year.to_i, month.to_i, -1))
-    @stats[:time_sat_this_month] = time_sat_this_month(month: month, year: year)
-    @stats[:entries_this_month] = sits_by_month(month, year).count
-    @stats
+  def days_sat_this_month(month, year)
+    days_sat_in_date_range(Date.new(year.to_i, month.to_i, 01), Date.new(year.to_i, month.to_i, -1))
+  end
+
+  def entries_this_month(month, year)
+    sits_by_month(month, year).count
   end
 
   # Returns the number of days, in a date range, where the user sat
   def days_sat_in_date_range(start_date, end_date)
-    all_dates = sits.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC').pluck(:created_at)
+    all_dates = @user.sits.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC').pluck(:created_at)
     last_one = total = 0
     # Dates are ordered so just check the current date aint the same day as the one before
     # This stops multiple sits in one day incrementing the total by more than 1

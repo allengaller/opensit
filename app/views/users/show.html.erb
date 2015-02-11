@@ -67,7 +67,7 @@
 
         <% if !@sits.empty? %>
           <select class="date_range_select">
-            <%= timeline(@journal.dropdown_months) %>
+            <%= timeline(@journal.months_sat) %>
           </select>
         <% end %>
 
@@ -75,10 +75,10 @@
             <p class="month_stats">
               <% if @sits.empty? %>
                 Nothing to see here, yet.
-              <% elsif @stats[:days_sat_this_month].zero? %>
+              <% elsif @journal.days_sat_this_month(@month, @year).zero? %>
                 Zzzzz... Nothing logged this month. <a class="previous" href="?year=<%=@first_month[0]%>&month=<%=@first_month[1]%>">Check out their latest journal entries.</a>
               <% else %>
-                Sat on <%=@stats[:days_sat_this_month]%> days this month, totalling <%=@stats[:time_sat_this_month]%> practice. (<%=@stats[:entries_this_month]%> entries total)
+                Sat on <%=@journal.days_sat_this_month(@month, @year)%> days this month, totalling <%=@journal.time_sat_this_month(@month, @year)%> practice. (<%=@journal.entries_this_month(@month, @year)%> entries total)
               <% end %>
             </p>
           </div>

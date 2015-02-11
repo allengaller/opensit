@@ -19,7 +19,8 @@ class UsersController < ApplicationController
   def me
     @feed_items = current_user.feed.paginate(:page => params[:page])
     @user = current_user
-    @latest = @user.latest_sit(current_user)
+    @journal = @user.journal(current_user)
+    @latest = @journal.latest_sit
     @goals = @user.goals
 
     @goals.each do |g|
@@ -38,26 +39,24 @@ class UsersController < ApplicationController
   def show
     @user = User.where("lower(username) = lower(?)", params[:username]).first!
 
+    # If viewable (by this registered user), or public journal
     if (current_user && current_user.can_view_content_of(@user)) || @user.privacy_setting == 'public'
-      @journal = Journal.new(@user)
-      # @by_month = @user.journal_range(current_user)
-
-      month = params[:month] ? params[:month] : Date.today.month
-      year = params[:year] ? params[:year] : Date.today.year
-      # user.journal_next_prev_links(@by_month)
+      @month = params[:month] ? params[:month] : Date.today.month
+      @year = params[:year] ? params[:year] : Date.today.year
+      @journal = Journal.new(@user, current_user)
 
       # Viewing your own profile
       if current_user == @user
         Sit.unscoped do
-          @sits = @user.sits_by_month(month, year, current_user).newest_first
+          @sits = @journal.sits_by_month(@month, @year).newest_first
         end
-        @stats = @user.get_monthly_stats(month, year)
+        # @stats = @journal.get_monthly_stats(month, year)
 
       # Viewing someone elses profile
       else
         if !@user.private_journal?
-          @sits = @user.sits_by_month(month, year, current_user).newest_first
-          @stats = @user.get_monthly_stats(month, year)
+          @sits = @journal.sits_by_month(@month, @year).newest_first
+          # @stats = @user.get_monthly_stats(month, year)
         end
       end
     else

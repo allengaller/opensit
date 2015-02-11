@@ -6,7 +6,7 @@ class SitsController < ApplicationController
     @sit = Sit.unscoped.find(params[:id])
     redirect_to me_path if !@sit.viewable?(current_user)
 
-    @latest = @sit.user.latest_sit(current_user)
+    @latest = @sit.user.journal.latest_sit
 
     # Views, not very accurate as any guest visit increments by one
     if current_user

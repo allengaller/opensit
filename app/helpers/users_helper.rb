@@ -44,16 +44,18 @@ module UsersHelper
 
   def timeline(dates)
     current_year = Time.now.year
+    html = ''
 
-    dates.map do |l|
-      type, count = l
-      if type.to_s.size == 4
-        current_year = type
-        "<optgroup label='#{type} (#{count})'>"
-      else
-        "<option " + (current_year == params[:year].to_i && type == params[:month].to_i ? 'selected ' : '') + "value='" + "#{user_path(params[:username])}/#{params[:id]}?year=#{current_year}&month=#{type.to_s.rjust(2, '0')}" + "'>" + "#{Date::MONTHNAMES[type]}, #{current_year}</option>"
+    dates.keys.each do |year|
+      html << "<optgroup label='#{year} (#{year})'>"
+      if !dates[year].empty?
+        dates[year].each_pair do |month, sit_count|
+          html << "<option " + (current_year == params[:year].to_i && month == params[:month].to_i ? 'selected ' : '') + "value='" + "#{user_path(params[:username])}/#{params[:id]}?year=#{current_year}&month=#{month.to_s.rjust(2, '0')}" + "'>" + "#{Date::MONTHNAMES[month]}, #{current_year}</option>"
+        end
       end
-    end.join(' ').html_safe
+    end
+
+    return html.html_safe
   end
 
   def joined_date(user)
