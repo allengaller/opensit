@@ -43,16 +43,17 @@ module UsersHelper
   end
 
   def timeline(dates)
-    current_year = Time.now.year
     html = ''
+    current_year = ''
+    dates.each do |entry|
+      year, month, sit_count = entry.values[0]
 
-    dates.keys.each do |year|
-      html << "<optgroup label='#{year} (#{year})'>"
-      if !dates[year].empty?
-        dates[year].each_pair do |month, sit_count|
-          html << "<option " + (current_year == params[:year].to_i && month == params[:month].to_i ? 'selected ' : '') + "value='" + "#{user_path(params[:username])}/#{params[:id]}?year=#{current_year}&month=#{month.to_s.rjust(2, '0')}" + "'>" + "#{Date::MONTHNAMES[month]}, #{current_year}</option>"
-        end
+      if current_year != year
+        html << "<optgroup label='#{year} (#{year})'>"
+        current_year = year
       end
+
+      html << "<option " + (year == params[:year].to_i && month == params[:month] ? 'selected ' : '') + "value='" + "#{user_path(params[:username])}/#{params[:id]}?year=#{year}&month=#{month}" + "'>" + "#{Date::MONTHNAMES[month.to_i]}, #{year}</option>"
     end
 
     return html.html_safe

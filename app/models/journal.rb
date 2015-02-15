@@ -40,7 +40,7 @@ class Journal
   end
 
   def months_sat
-    dates = {}
+    dates = []
     from = first_sit.created_at
     to = Date.today
     (Date.new(from.year, from.month)..Date.new(to.year, to.month)).each do |d|
@@ -48,22 +48,70 @@ class Journal
         # PLUCK DATES ONLY on SINGLE QUERY and CALCULATE sits_this_month in ruby
         sits_this_month = sits_by_month(d.month, d.year).count
         if sits_this_month > 0
-          dates[d.year] = {} if !dates[d.year]
-          dates[d.year][d.month] = sits_this_month
+          padded_month = d.month.to_s.rjust(2, '0')
+          key = "#{padded_month}_#{d.year}".to_s
+          row = {}
+          row[key] = [d.year, padded_month, sits_this_month]
+          dates.push row
         end
       end
     end
 
-    return dates
+    return dates.reverse
   end
 
-  def next_month
-    # check current_user
+  def next_month(month, year)
+    key = "#{month}_#{year}"
+    # Get a list of all month keys so we can
+    # find current month and locate the next one
+    months_list = months_sat.collect {|entry| entry.keys[0]}
+    current_index = months_list.index key
+    if current_index && current_index != 0 # Check there is a next month
+      target_month = months_sat[current_index - 1].values[0][1]
+      target_year = months_sat[current_index - 1].values[0][0]
+      return "#{target_month}_#{target_year}"
+    else
+      return nil
+    end
   end
 
-  def prev_month
+  def previous_month(month, year)
+    key = "#{month}_#{year}"
+    # Get a list of all month keys so we can
+    # find current month and locate the next one
+    months_list = months_sat.collect {|entry| entry.keys[0]}
+    current_index = months_list.index key
+    if current_index && months_sat[current_index + 1] # Check there is a previous month
+      target_month = months_sat[current_index + 1].values[0][1]
+      target_year = months_sat[current_index + 1].values[0][0]
+      return "#{target_month}_#{target_year}"
+    else
+      return nil
+    end
     # check current_user
   end
+    # # check current_user
+    # index = @by_month[:list_of_months].index "#{year} #{sprintf '%02d', month}" if user.sits.present?
+
+    # # Generate prev/next links
+    # # .. for someone who's sat this month
+    # if index
+    #   if @by_month[:list_of_months][index + 1]
+    #     @prev = @by_month[:list_of_months][index + 1].split(' ')
+    #   end
+
+    #   if !index.zero?
+    #     @next = @by_month[:list_of_months][index - 1].split(' ')
+    #   end
+    # else
+    #   if @by_month
+    #     # Haven't sat this month - when was the last time they sat?
+    #     @first_month =  @by_month[:list_of_months].first.split(' ')
+    #   end
+    #   # Haven't sat at all
+    # end
+  # end
+
 
   def sits_by_year(year)
     sits.where("EXTRACT(year FROM created_at) = ?", year.to_s)
@@ -155,28 +203,5 @@ class Journal
       total_time += s.duration
     end
     total_time
-  end
-
-  # MERGE INTO THE ABOVE
-  def journal_next_prev_links(by_month)
-    index = @by_month[:list_of_months].index "#{year} #{sprintf '%02d', month}" if user.sits.present?
-
-    # Generate prev/next links
-    # .. for someone who's sat this month
-    if index
-      if @by_month[:list_of_months][index + 1]
-        @prev = @by_month[:list_of_months][index + 1].split(' ')
-      end
-
-      if !index.zero?
-        @next = @by_month[:list_of_months][index - 1].split(' ')
-      end
-    else
-      if @by_month
-        # Haven't sat this month - when was the last time they sat?
-        @first_month =  @by_month[:list_of_months].first.split(' ')
-      end
-      # Haven't sat at all
-    end
   end
 end

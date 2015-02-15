@@ -90,14 +90,15 @@
             <%= render :partial => 'sits/day_journal', :locals => { :sit => sit } %>
           <% end %>
 
-          <% if false %>
+          <% if true %>
+          <%# !@stats[:days_sat_this_month].zero? %>
             <div class="month_navigation col-md-12">
-              <% if @prev %>
-                <a class="previous" href="?year=<%=@prev[0]%>&month=<%=@prev[1]%>">&larr; Previous</a>
+              <% if @journal.previous_month(@month, @year) %>
+                <a class="previous" href="?year=<%=@journal.previous_month(@month, @year).split('_')[1]%>&month=<%=@journal.previous_month(@month, @year).split('_')[0]%>">&larr; Previous</a>
               <% end %>
 
-              <% if @next %>
-                <a class="next" href="?year=<%=@next[0]%>&month=<%=@next[1]%>">Next &rarr;</a>
+              <% if @journal.next_month(@month, @year) %>
+                <a class="next" href="?year=<%=@journal.next_month(@month, @year).split('_')[1]%>&month=<%=@journal.next_month(@month, @year).split('_')[0]%>">Next &rarr;</a>
               <% end %>
             </div>
           <% end %>
