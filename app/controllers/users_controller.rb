@@ -41,23 +41,20 @@ class UsersController < ApplicationController
 
     # If viewable (by this registered user), or public journal
     if (current_user && current_user.can_view_content_of(@user)) || @user.privacy_setting == 'public'
-      @month = params[:month] ? params[:month] : Date.today.month
+      @month = params[:month] ? params[:month] : Date.today.month.to_s.rjust(2, '0')
       @year = params[:year] ? params[:year] : Date.today.year
-      @journal = Journal.new(@user, current_user)
+      @journal = @user.journal(current_user)
 
-      # Viewing your own profile
-      if current_user == @user
-        Sit.unscoped do
-          @sits = @journal.sits_by_month(@month, @year).newest_first
-        end
-        # @stats = @journal.get_monthly_stats(month, year)
+      @has_sat = true if !@user.sits.empty?
+      return unless @has_sat
 
-      # Viewing someone elses profile
-      else
-        if !@user.private_journal?
-          @sits = @journal.sits_by_month(@month, @year).newest_first
-          # @stats = @user.get_monthly_stats(month, year)
-        end
+      @sits_this_month = @journal.sits_by_month(@month, @year).newest_first
+
+      # Load sits from last month the user sat
+      if @sits_this_month.empty?
+        @month = @journal.months_sat.first.keys[0].split('_')[0]
+        @year = @journal.months_sat.first.keys[0].split('_')[1]
+        @sits_this_month = @journal.sits_by_month(@month, @year).newest_first
       end
     else
       @unviewable = true

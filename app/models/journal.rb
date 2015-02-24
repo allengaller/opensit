@@ -90,28 +90,6 @@ class Journal
     end
     # check current_user
   end
-    # # check current_user
-    # index = @by_month[:list_of_months].index "#{year} #{sprintf '%02d', month}" if user.sits.present?
-
-    # # Generate prev/next links
-    # # .. for someone who's sat this month
-    # if index
-    #   if @by_month[:list_of_months][index + 1]
-    #     @prev = @by_month[:list_of_months][index + 1].split(' ')
-    #   end
-
-    #   if !index.zero?
-    #     @next = @by_month[:list_of_months][index - 1].split(' ')
-    #   end
-    # else
-    #   if @by_month
-    #     # Haven't sat this month - when was the last time they sat?
-    #     @first_month =  @by_month[:list_of_months].first.split(' ')
-    #   end
-    #   # Haven't sat at all
-    # end
-  # end
-
 
   def sits_by_year(year)
     sits.where("EXTRACT(year FROM created_at) = ?", year.to_s)
