@@ -52,8 +52,7 @@ class UsersController < ApplicationController
 
       # Load sits from last month the user sat
       if @sits_this_month.empty?
-        @month = @journal.months_sat.first.keys[0].split('_')[0]
-        @year = @journal.months_sat.first.keys[0].split('_')[1]
+        @month, @year = @journal.most_recent_month
         @sits_this_month = @journal.sits_by_month(@month, @year).newest_first
       end
     else

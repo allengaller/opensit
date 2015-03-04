@@ -60,6 +60,10 @@ class Journal
     return dates.reverse
   end
 
+  def most_recent_month
+    months_sat.first.keys[0].split('_')
+  end
+
   def next_month(month, year)
     key = "#{month}_#{year}"
     # Get a list of all month keys so we can

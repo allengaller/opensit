@@ -56,7 +56,7 @@ class User < ActiveRecord::Base
   # Privacy
   scope :privacy_selected_users, ->(user) { select('users.id')
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
-      .where('(authorised_users.authorised_user_id = ?)', user.id) }
+      .where("users.privacy_setting = 'selected_users' AND (authorised_users.authorised_user_id = ?)", user.id) }
   scope :privacy_following_users, ->(user) { select('users.id')
       .where("users.id IN (?) AND users.privacy_setting = 'following'", user.follower_ids) }
 
