@@ -86,15 +86,6 @@ describe User do
           "Validation failed: Username cannot contain spaces"
         )
     end
-
-    # Used when we had /username routes
-    #
-    # it "should not allow usernames that match a route name" do
-    #   expect { create :user, username: 'front' }.to raise_error(
-    #     ActiveRecord::RecordInvalid,
-    #     "Validation failed: Username 'front' is reserved"
-    #   )
-    # end
   end
 
   describe "#to_param" do
@@ -228,9 +219,18 @@ describe User do
         expect(buddha.latest_sit(buddha))
           .to eq [third_sit]
       end
-      # it "does not return the public sits that do not belong to a user" do
-      #   expect(buddha.latest_sit(buddha)).to_not match_array([public_sits])
-      # end
+
+      context 'private sit' do
+        let(:private_sit) { create(:sit, :private, user: buddha) }
+
+        it "returns private sit for owner" do
+          expect(buddha.journal(buddha).latest_sit).to include private_sit
+        end
+
+        it "doesn't show for another user" do
+          expect(buddha.journal(ananda).latest_sit).to_not include private_sit
+        end
+      end
     end
 
     describe "#sits_by_year" do
