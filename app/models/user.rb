@@ -51,9 +51,10 @@ class User < ActiveRecord::Base
   validates_attachment :avatar, content_type: { content_type: ["image/jpg", "image/jpeg", "image/png", "image/gif"] }
 
   # Scopes
+  default_scope -> { where.not("users.privacy_setting = 'private'") }
   scope :newest_first, -> { order("created_at DESC") }
 
-  # Privacy
+  # Privacy scopes
   scope :privacy_selected_users, ->(user) { select('users.id')
       .joins('LEFT JOIN authorised_users ON authorised_users.user_id = users.id')
       .where("users.privacy_setting = 'selected_users' AND (authorised_users.authorised_user_id = ?)", user.id) }
@@ -124,7 +125,7 @@ class User < ActiveRecord::Base
       end
       write_attribute(:privacy_setting, value)
     else
-      raise ArgumentError
+      raise ArgumentError, 'Invalid privacy_setting value'
     end
   end
 
