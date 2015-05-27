@@ -214,123 +214,6 @@ describe User do
     let(:this_year) { Time.now.year }
     let(:this_month) { Time.now.month }
 
-    describe "#latest_sit" do
-      it "returns the latest sit for a user" do
-        expect(buddha.latest_sit(buddha))
-          .to eq [third_sit]
-      end
-
-      context 'private sit' do
-        let(:private_sit) { create(:sit, :private, user: buddha) }
-
-        it "returns private sit for owner" do
-          expect(buddha.journal(buddha).latest_sit).to include private_sit
-        end
-
-        it "doesn't show for another user" do
-          expect(buddha.journal(ananda).latest_sit).to_not include private_sit
-        end
-      end
-    end
-
-    describe "#sits_by_year" do
-      it "returns all sits for a user for a given year" do
-        expect(buddha.sits_by_year(this_year))
-          .to match_array(
-            [first_sit, second_sit, third_sit]
-          )
-      end
-
-      it "does not include sits outside of a given year" do
-        expect(buddha.sits_by_year(this_year))
-          .to_not include(fourth_sit)
-      end
-    end
-
-    describe "#sits_by_month" do
-      it "returns all sits for a user for a given month and year" do
-        expect(buddha.sits_by_month(this_month, this_year))
-          .to match_array(
-            [first_sit, second_sit, third_sit]
-          )
-      end
-
-      it "does not include sits outside of a given month and year" do
-        expect(buddha.sits_by_month(this_month, this_year))
-          .to_not include(fourth_sit)
-      end
-    end
-
-    describe "#sat_on_date?" do
-      before do
-        create(:sit, created_at: Date.yesterday, user: buddha)
-      end
-
-      it "return true if user sat" do
-        expect(buddha.sat_on_date?(Date.yesterday)).to eq(true)
-      end
-
-      it "return false if user didn't sit" do
-        expect(buddha.sat_on_date?(Date.today - 2)).to eq(false)
-      end
-    end
-
-    describe '#days_sat_in_date_range' do
-      before do
-        2.times do |i|
-          create(:sit, created_at: Date.yesterday - i, user: buddha)
-        end
-        # The below shouldn't count towards total as buddha already sat that day
-        create(:sit, created_at: Date.yesterday - 1, user: buddha)
-      end
-      it 'returns number of days' do
-        expect(buddha.sits.count).to eq 3
-        expect(buddha.days_sat_in_date_range(Date.yesterday - 3, Date.today)).to eq(2)
-      end
-    end
-
-    describe "#time_sat_on_date" do
-      it 'returns total minutes sat that day' do
-        2.times do
-          create(:sit, created_at: Date.today, user: buddha, duration: 20)
-        end
-        expect(buddha.time_sat_on_date(Date.today)).to eq(40)
-      end
-    end
-
-    describe "#sat_for_x_on_date?" do
-      before do
-        create(:sit, created_at: Date.yesterday, user: buddha, duration: 30)
-      end
-      it 'returns true if user has sat x minutes that day' do
-        expect(buddha.sat_for_x_on_date?(30, Date.yesterday)).to eq(true)
-      end
-
-      it 'returns false if user sat for less than x minutes that day' do
-        expect(buddha.sat_for_x_on_date?(31, Date.yesterday)).to eq(false)
-      end
-    end
-
-    describe "#days_sat_for_min_x_minutes_in_date_range" do
-      it 'should return correct number of days' do
-        2.times do |i|
-          create(:sit, created_at: Date.today - i, user: buddha, duration: 30)
-        end
-        expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today - 2, Date.today)).to eq 2
-      end
-
-      it 'should only return 1 when user sat twice on that day' do
-        # Hard learned lesson: creating two sits programatically on the same day gives them both identical timestamps, which
-        # when the function in question performs .uniq on a date range can give a very misleading pass when it should fail!
-        # This could cause problems in all kinds of functions that work with dates. Hence + i.seconds to keep them unique.
-        2.times do |i|
-          create(:sit, created_at: Date.today + i.seconds, user: buddha, duration: 30)
-        end
-
-        expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today, Date.today)).to eq 1
-      end
-    end
-
     describe "#feed" do
       context 'public journal' do
         before do
@@ -410,24 +293,19 @@ describe User do
       context "private" do
         it "updates all of a user's sits to be private" do
           create(:sit, :public, user: buddha)
-          # puts user.privacy_setting
-          # puts user.sits.inspect
-          # user.privacy_setting=('private');
-          # user.save!
-          # puts user.privacy_setting
-          # puts user.sits.inspect
 
           expect { buddha.privacy_setting=('private'); buddha.save! }
-            .to change { buddha.reload.sits.where(private: true).count }.from(0).to(1)
+            .to change { buddha.reload.sits.unscoped.where(private: true).count }.from(0).to(1)
         end
       end
 
       context "when the argument is not private" do
         it "updates all of a user's sits to not be private" do
-          create(:sit, :private, user: user)
+          dave = create(:user, :private_journal)
+          create(:sit, :private, user: dave)
 
-          expect { user.privacy_setting=('following') }
-            .to change { user.sits.where(private: false).count }.from(0).to(1)
+          expect { dave.privacy_setting=('following'); dave.save! }
+            .to change { dave.sits.where(private: false).count }.from(0).to(1)
         end
       end
 

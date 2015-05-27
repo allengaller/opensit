@@ -14,6 +14,10 @@ FactoryGirl.define do
       username "ananda"
     end
 
+    trait :private_journal do
+      privacy_setting 'private'
+    end
+
     trait :has_first_name do
       first_name { Faker::Name.first_name }
     end
