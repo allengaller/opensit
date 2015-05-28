@@ -3,7 +3,7 @@ class PagesController < ApplicationController
     if user_signed_in?
       redirect_to controller: :users, action: :me
     else
-      @sits = Sit.with_body.newest_first.limit(30)
+      @sits = Sit.public_sits.with_body.newest_first.limit(30)
       @page_class = 'front-page'
 
       render 'front', layout: 'minimal'
