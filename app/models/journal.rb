@@ -96,7 +96,7 @@ class Journal
   end
 
   def sits_by_year(year)
-    sits.where("EXTRACT(year FROM created_at) = ?", year.to_s)
+    @user.sits.where("EXTRACT(year FROM created_at) = ?", year.to_s)
   end
 
   def sits_by_month(month, year)
@@ -124,7 +124,7 @@ class Journal
   # Do not put me in a loop! Use #days_sat_in_date_range
   # Returns true if user sat on the date passed
   def sat_on_date?(date)
-    sits.where(created_at: date.beginning_of_day..date.end_of_day).present?
+    @user.sits.where(created_at: date.beginning_of_day..date.end_of_day).present?
   end
 
   def days_sat_this_month(month, year)
@@ -150,7 +150,7 @@ class Journal
 
   # Do not put me in a loop! Use #days_sat_for_min_x_minutes_in_date_range
   def sat_for_x_on_date?(minutes, date)
-    if sits.where(created_at: date.beginning_of_day..date.end_of_day).present?
+    if @user.sits.where(created_at: date.beginning_of_day..date.end_of_day).present?
       time_sat_on_date(date) >= minutes
     else
       false
@@ -159,7 +159,7 @@ class Journal
 
   # Returns the number of days, in a date range, where user sat for a minimum x minutes that day
   def days_sat_for_min_x_minutes_in_date_range(duration, start_date, end_date)
-    all_sits = sits.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC')
+    all_sits = @user.sits.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC')
     all_datetimes = all_sits.pluck(:created_at)
     all_dates = []
     all_datetimes.each do |d|
@@ -181,7 +181,7 @@ class Journal
 
   def time_sat_on_date(date)
     total_time = 0
-    sits.where(created_at: date.beginning_of_day..date.end_of_day).each do |s|
+    @user.sits.where(created_at: date.beginning_of_day..date.end_of_day).each do |s|
       total_time += s.duration
     end
     total_time

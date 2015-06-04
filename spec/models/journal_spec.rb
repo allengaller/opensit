@@ -7,10 +7,22 @@ describe Journal do
   let(:user) { build(:user) }
   let(:buddha) { create(:buddha) }
   let(:ananda) { create(:ananda) }
+  let(:this_year) { Time.now.year }
+  let(:this_month) { Time.now.month }
+  let(:first_sit) { create(:sit, :one_hour_ago, user: buddha) }
+  let(:second_sit) do
+    create(:sit, :two_hours_ago, user: buddha)
+  end
+  let (:third_sit) do
+    create(:sit, :three_hours_ago, user: buddha)
+  end
+  let (:fourth_sit) do
+    create(:sit, :one_year_ago, user: buddha)
+  end
 
   describe "#latest_sit" do
     it "returns the latest sit for a user" do
-      expect(buddha.latest_sit(buddha))
+      expect(buddha.journal(buddha).latest_sit)
         .to eq [third_sit]
     end
 
@@ -36,21 +48,21 @@ describe Journal do
     end
 
     it "does not include sits outside of a given year" do
-      expect(buddha.sits_by_year(this_year))
+      expect(buddha.journal.sits_by_year(this_year))
         .to_not include(fourth_sit)
     end
   end
 
   describe "#sits_by_month" do
     it "returns all sits for a user for a given month and year" do
-      expect(buddha.sits_by_month(this_month, this_year))
+      expect(buddha.journal.sits_by_month(this_month, this_year))
         .to match_array(
           [first_sit, second_sit, third_sit]
         )
     end
 
     it "does not include sits outside of a given month and year" do
-      expect(buddha.sits_by_month(this_month, this_year))
+      expect(buddha.journal.sits_by_month(this_month, this_year))
         .to_not include(fourth_sit)
     end
   end
@@ -61,11 +73,11 @@ describe Journal do
     end
 
     it "return true if user sat" do
-      expect(buddha.sat_on_date?(Date.yesterday)).to eq(true)
+      expect(buddha.journal.sat_on_date?(Date.yesterday)).to eq(true)
     end
 
     it "return false if user didn't sit" do
-      expect(buddha.sat_on_date?(Date.today - 2)).to eq(false)
+      expect(buddha.journal.sat_on_date?(Date.today - 2)).to eq(false)
     end
   end
 
@@ -79,7 +91,7 @@ describe Journal do
     end
     it 'returns number of days' do
       expect(buddha.sits.count).to eq 3
-      expect(buddha.days_sat_in_date_range(Date.yesterday - 3, Date.today)).to eq(2)
+      expect(buddha.journal.days_sat_in_date_range(Date.yesterday - 3, Date.today)).to eq(2)
     end
   end
 
@@ -88,7 +100,7 @@ describe Journal do
       2.times do
         create(:sit, created_at: Date.today, user: buddha, duration: 20)
       end
-      expect(buddha.time_sat_on_date(Date.today)).to eq(40)
+      expect(buddha.journal.time_sat_on_date(Date.today)).to eq(40)
     end
   end
 
@@ -97,11 +109,11 @@ describe Journal do
       create(:sit, created_at: Date.yesterday, user: buddha, duration: 30)
     end
     it 'returns true if user has sat x minutes that day' do
-      expect(buddha.sat_for_x_on_date?(30, Date.yesterday)).to eq(true)
+      expect(buddha.journal.sat_for_x_on_date?(30, Date.yesterday)).to eq(true)
     end
 
     it 'returns false if user sat for less than x minutes that day' do
-      expect(buddha.sat_for_x_on_date?(31, Date.yesterday)).to eq(false)
+      expect(buddha.journal.sat_for_x_on_date?(31, Date.yesterday)).to eq(false)
     end
   end
 
@@ -110,7 +122,7 @@ describe Journal do
       2.times do |i|
         create(:sit, created_at: Date.today - i, user: buddha, duration: 30)
       end
-      expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today - 2, Date.today)).to eq 2
+      expect(buddha.journal.days_sat_for_min_x_minutes_in_date_range(30, Date.today - 2, Date.today)).to eq 2
     end
 
     it 'should only return 1 when user sat twice on that day' do
@@ -121,7 +133,7 @@ describe Journal do
         create(:sit, created_at: Date.today + i.seconds, user: buddha, duration: 30)
       end
 
-      expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today, Date.today)).to eq 1
+      expect(buddha.journal.days_sat_for_min_x_minutes_in_date_range(30, Date.today, Date.today)).to eq 1
     end
   end
 end
