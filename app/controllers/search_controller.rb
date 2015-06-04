@@ -4,7 +4,7 @@ class SearchController < ApplicationController
     @users = base_users.fuzzy_search(params[:q]).paginate(:page => params[:page])
 
     base_sits = user_signed_in? ? Sit.content_i_can_view(current_user) : Sit.public_sits
-    @sits = Sit.content_i_can_view(current_user).basic_search(params[:q]).paginate(:page => params[:page])
+    @sits = base_sits.basic_search(params[:q]).paginate(:page => params[:page])
 
     if Tag.find_by_name(params[:q])
       @tagged = Sit.tagged_with(params[:q]).paginate(:page => params[:page])

@@ -2,8 +2,8 @@ class TagsController < ApplicationController
 
   # GET /tags/:id
   def show
-		if Tag.find_by_name(params[:id]) != nil
-			@sits = Sit.tagged_with(params[:id])
+		if Tag.find_by_name(params[:id])
+			@sits = Sit.tagged_with(params[:id], current_user)
 		else
 			redirect_to root_path
 		end
@@ -11,5 +11,4 @@ class TagsController < ApplicationController
     @title = "Tag: #{params[:id]}"
     @page_class = 'view-tag'
   end
-
 end

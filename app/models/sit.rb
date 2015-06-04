@@ -114,8 +114,10 @@ class Sit < ActiveRecord::Base
   # TAGS
   ##
 
-  def self.tagged_with(name)
-    Tag.find_by_name!(name).sits
+  def self.tagged_with(name, current_user = nil)
+    query = Tag.find_by_name!(name).sits
+    return query.content_i_can_view(current_user) if current_user
+    return query.public_sits
   end
 
   def self.tag_counts
