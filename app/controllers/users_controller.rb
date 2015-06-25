@@ -68,7 +68,7 @@ class UsersController < ApplicationController
   def following
     @user = User.where("lower(username) = lower(?)", params[:username]).first!
     @users = @user.followed_users
-    @latest = @user.latest_sit(current_user)
+    @latest = @user.journal(current_user).latest_sit
 
     if @user == current_user
       @title = "People I follow"
@@ -84,7 +84,7 @@ class UsersController < ApplicationController
   def followers
     @user = User.where("lower(username) = lower(?)", params[:username]).first!
     @users = @user.followers
-    @latest = @user.latest_sit(current_user)
+    @latest = @user.journal(current_user).latest_sit
 
     if @user == current_user
       @title = "People who follow me"
