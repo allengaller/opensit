@@ -105,10 +105,9 @@ class Journal
         @user.sits.where("EXTRACT(year FROM created_at) = ?
           AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
       end
-    elsif @current_user.can_view_content_of(@user) || @user.public_journal?
+    elsif (@current_user && @current_user.can_view_content_of(@user)) || @user.public_journal?
       @user.sits.where("EXTRACT(year FROM created_at) = ?
         AND EXTRACT(month FROM created_at) = ?", year.to_s, month.to_s.rjust(2, '0'))
-      # .where('user_id in (?)')
     end
   end
 

@@ -10,15 +10,9 @@ describe Journal do
   let(:this_year) { Time.now.year }
   let(:this_month) { Time.now.month }
   let(:first_sit) { create(:sit, :one_hour_ago, user: buddha) }
-  let(:second_sit) do
-    create(:sit, :two_hours_ago, user: buddha)
-  end
-  let (:third_sit) do
-    create(:sit, :three_hours_ago, user: buddha)
-  end
-  let (:fourth_sit) do
-    create(:sit, :one_year_ago, user: buddha)
-  end
+  let(:second_sit) { create(:sit, :two_hours_ago, user: buddha) }
+  let(:third_sit) { create(:sit, :three_hours_ago, user: buddha) }
+  let(:fourth_sit) { create(:sit, :one_year_ago, user: buddha) }
 
   describe "#latest_sit" do
     it "returns the latest sit for a user" do
