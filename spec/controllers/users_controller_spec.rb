@@ -50,7 +50,7 @@ describe UsersController, :type => :controller do
 
           get :show, username: 'buddha', year: Date.today.year, month: Date.today.month
           expect(assigns(:sits_this_month)).to have(1).items
-          expect(assigns(:sits_this_month)).to eq(@buddha.journal.sits_by_month(Date.today.year, Date.today.month).newest_first)
+          expect(assigns(:sits_this_month)).to eq(@buddha.journal(@buddha).sits_by_month(Date.today.month, Date.today.year).newest_first)
           expect(response).to render_template("users/show")
         end
 
