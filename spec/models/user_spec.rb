@@ -286,6 +286,25 @@ describe User do
         end
         expect(buddha.time_sat_on_date(Date.today)).to eq(40)
       end
+      it 'does not count diary entries' do
+        create(:sit, created_at: Date.today, user: buddha, duration: 60)
+        create(:sit, created_at: Date.today, user: buddha, duration: 60, s_type: 1, title: Faker::Lorem.word)
+        expect(buddha.time_sat_on_date(Date.today)).to eq(60)
+      end
+    end
+
+    describe "#total_hours_sat" do
+      it 'returns total hours sat' do
+        2.times do
+          create(:sit, created_at: Date.today, user: buddha, duration: 60)
+        end
+        expect(buddha.total_hours_sat).to eq(2)
+      end
+      it 'does not count diary entries' do
+        create(:sit, created_at: Date.today, user: buddha, duration: 60)
+        create(:sit, created_at: Date.today, user: buddha, duration: 60, s_type: 1, title: Faker::Lorem.word)
+        expect(buddha.total_hours_sat).to eq(1)
+      end
     end
 
     describe "#sat_for_x_on_date?" do
@@ -318,6 +337,12 @@ describe User do
         end
 
         expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today, Date.today)).to eq 1
+      end
+
+      it 'does not count diary entries' do
+        create(:sit, created_at: Date.today, user: buddha, duration: 30)
+        create(:sit, created_at: Date.today - 1, user: buddha, duration: 30, s_type: 1, title: Faker::Lorem.word)
+        expect(buddha.days_sat_for_min_x_minutes_in_date_range(30, Date.today - 2, Date.today)).to eq 1
       end
     end
 

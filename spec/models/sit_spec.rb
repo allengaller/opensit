@@ -4,6 +4,16 @@ describe Sit do
   let(:buddha) { create(:buddha) }
   let(:ananda) { create(:ananda) }
 
+  describe 'scopes' do
+    context 'without_diaries' do
+      it 'does not return diaries' do
+        create(:sit, user: buddha, created_at: Date.today)
+        create(:sit, user: buddha, created_at: Date.today, s_type: 1, title: Faker::Lorem.word)
+        expect(buddha.sits.without_diaries.count).to eq(1)
+      end
+    end
+  end
+
   describe 'creating a user' do
 	  it 'sets the streak to 0' do
 	    user = create(:user)

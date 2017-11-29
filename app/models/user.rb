@@ -159,7 +159,7 @@ class User < ActiveRecord::Base
 
   # Returns the number of days, in a date range, where user sat for a minimum x minutes that day
   def days_sat_for_min_x_minutes_in_date_range(duration, start_date, end_date)
-    all_sits = sits.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC')
+    all_sits = sits.without_diaries.where(created_at: start_date.beginning_of_day..end_date.end_of_day).order('created_at DESC')
     all_datetimes = all_sits.pluck(:created_at)
     all_dates = []
     all_datetimes.each do |d|
@@ -181,14 +181,14 @@ class User < ActiveRecord::Base
 
   def time_sat_on_date(date)
     total_time = 0
-    sits.where(created_at: date.beginning_of_day..date.end_of_day).each do |s|
+    sits.without_diaries.where(created_at: date.beginning_of_day..date.end_of_day).each do |s|
       total_time += s.duration
     end
     total_time
   end
 
   def total_hours_sat
-    sits.sum(:duration) / 60
+    sits.without_diaries.sum(:duration) / 60
   end
 
   # Returns list of months a user has sat, and sitting totals for each month

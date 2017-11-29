@@ -23,6 +23,7 @@ class Sit < ActiveRecord::Base
   scope :today, -> { where("DATE(created_at) = ?", Date.today) }
   scope :yesterday, -> { where("DATE(created_at) = ?", Date.yesterday) }
   scope :with_body, -> { where.not(body: '')}
+  scope :without_diaries, -> { where.not(s_type: 1) }
 
   # Pagination: sits per page
   self.per_page = 20
