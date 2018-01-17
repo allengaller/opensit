@@ -6,7 +6,7 @@ class PagesController < ApplicationController
       @sits = Sit.communal.with_body.newest_first.limit(30)
       @page_class = 'front-page'
 
-      render 'front', layout: 'minimal'
+      render 'front', layout: 'minimal_coming_soon'
     end
   end
 
